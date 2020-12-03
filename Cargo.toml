@@ -9,3 +9,8 @@ edition = "2018"
 [dependencies]
 regex = "1"
 lazy_static = "1.3"
+derive_more = "0.13.0"
+
+[[bin]]
+name = "day3"
+path = "src/day3.rs"
