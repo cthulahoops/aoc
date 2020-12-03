@@ -44,7 +44,8 @@ impl Policy {
     }
 
     fn has_valid_positional(&self, password: &str) -> bool {
-        is_char_at(password, self.character, self.min) ^ is_char_at(password, self.character, self.max)
+        is_char_at(password, self.character, self.min)
+            ^ is_char_at(password, self.character, self.max)
     }
 }
 
