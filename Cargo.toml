@@ -12,6 +12,10 @@ lazy_static = "1.3"
 derive_more = "0.13.0"
 
 [[bin]]
+name = "day1"
+path = "src/day1.rs"
+
+[[bin]]
 name = "day2"
 path = "src/day2.rs"
 
