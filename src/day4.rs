@@ -20,7 +20,7 @@ impl<'a> Iterator for PassportIter<'a> {
     type Item = Vec<(&'a str, &'a str)>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut fields : Self::Item = vec![];
+        let mut fields: Self::Item = vec![];
         loop {
             match self.lines.next() {
                 None | Some("") => {
@@ -40,15 +40,7 @@ impl<'a> Iterator for PassportIter<'a> {
     }
 }
 
-const REQUIRED_FIELDS : &'static [&'static str] = &[
-    "byr",
-    "iyr",
-    "eyr",
-    "hgt",
-    "hcl",
-    "ecl",
-    "pid",
-];
+const REQUIRED_FIELDS: &'static [&'static str] = &["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"];
 
 lazy_static! {
     static ref HEIGHT_FORMAT: Regex = Regex::new(r"^(\d+)(cm|in)$").unwrap();
@@ -67,31 +59,40 @@ fn is_valid(key: &str, value: &str) -> bool {
         ("ecl", ecl) => EYE_COLOR.is_match(ecl),
         ("pid", pid) => PASSPORT_ID.is_match(pid),
         ("cid", _) => true,
-        (_, _) => false
+        (_, _) => false,
     }
 }
 
-fn is_valid_year(year : &str, min: i32, max: i32) -> bool {
+fn is_valid_year(year: &str, min: i32, max: i32) -> bool {
     match year.parse::<i32>() {
         Ok(year) => year >= min && year <= max,
-        _ => false 
+        _ => false,
     }
 }
 
 fn is_valid_height(height: &str) -> bool {
     if let Some(captures) = HEIGHT_FORMAT.captures(height) {
-        let amount : i32 = captures.get(1).unwrap().as_str().parse().unwrap();
+        let amount: i32 = captures.get(1).unwrap().as_str().parse().unwrap();
         match captures.get(2).unwrap().as_str() {
-            "cm" => { return amount >= 150 && amount <= 193; }
-            "in" => { return amount >= 59 && amount <= 76; }
-            _ => { return false; }
+            "cm" => {
+                return amount >= 150 && amount <= 193;
+            }
+            "in" => {
+                return amount >= 59 && amount <= 76;
+            }
+            _ => {
+                return false;
+            }
         }
     }
     false
 }
-            
+
 fn is_passport_valid(passport: &Vec<(&str, &str)>) -> bool {
-    let passport_fields : HashMap<String, String> = passport.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
+    let passport_fields: HashMap<String, String> = passport
+        .iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
 
     for field in REQUIRED_FIELDS {
         if !passport_fields.contains_key(&field.to_string()) {
@@ -119,5 +120,4 @@ fn main() {
     }
 
     println!("Valid passports = {}", valid_passports);
-
 }
