@@ -1,26 +1,23 @@
 use std::collections::HashSet;
 
+fn parse_seat_number(code: &str) -> i32 {
+    let mut number = 0;
+    for x in code.chars() {
+        number *= 2;
+        if x == 'B' || x == 'R' {
+            number += 1;
+        }
+    }
+    number
+}
+
 fn main() {
     let content = std::fs::read_to_string("input/day5").unwrap();
-    let mut seats = HashSet::new();
-    let mut max = 0;
-    let mut min = 2 << 11;
-    for line in content.lines() {
-        let mut number: i32 = 0;
-        for x in line.chars() {
-            number *= 2;
-            if x == 'B' || x == 'R' {
-                number += 1;
-            }
-        }
-        if number > max {
-            max = number;
-        }
-        if number < min {
-            min = number;
-        }
-        seats.insert(number);
-    }
+    let seats: HashSet<i32> = content.lines().map(parse_seat_number).collect();
+
+    let min = seats.iter().cloned().fold(2 << 11, i32::min);
+    let max = seats.iter().cloned().fold(0, i32::max);
+
     println!("{}", max);
 
     for seat in min..max {
