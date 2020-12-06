@@ -1,36 +1,47 @@
 use std::collections::HashSet;
 
-fn answers(line: &str) -> HashSet<char> {
+type Answers = HashSet<char>;
+
+fn answers(line: &str) -> Answers {
     line.chars().collect()
+}
+
+fn group_answers<F: Fn(&Answers, &Answers) -> Answers>(
+    group: &Vec<Answers>,
+    op: F,
+) -> HashSet<char> {
+    let (first_answers, rest_answers) = group.split_first().unwrap();
+
+    rest_answers.iter()
+        .fold(first_answers.clone(), |group_answers, answer| {
+            op(&group_answers, answer)
+        })
+}
+
+fn sum_counts<I: Iterator<Item = Answers>>(grouped_answers: I) -> usize {
+    grouped_answers.map(|x| x.len()).sum()
 }
 
 fn main() {
     let content = std::fs::read_to_string("input/day6").unwrap();
 
-    let mut total_part_1 = 0;
-    let mut total_part_2 = 0;
+    let groups = content.split("\n\n").map(|group| group.trim_end().split('\n').map(answers).collect());
 
-    for group in content.split("\n\n") {
-        let mut people = group.trim_end().split("\n");
-        let first_answers = answers(people.next().unwrap());
-
-        let group_answers_1 = people
-            .clone()
-            .fold(first_answers.clone(), |group_answers, person| {
-                group_answers.union(&answers(person)).cloned().collect()
-            });
-
-        let group_answers_2 = people.fold(first_answers, |group_answers, person| {
-            group_answers
-                .intersection(&answers(person))
-                .cloned()
-                .collect()
+    let group_answers_1 = groups
+        .clone()
+        .map(|group| {
+            group_answers(&group, |group_answers, answers| {
+                group_answers.union(answers).cloned().collect()
+            })
         });
 
-        total_part_1 += group_answers_1.len();
-        total_part_2 += group_answers_2.len();
-    }
+    let group_answers_2 = groups
+        .map(|group| {
+            group_answers(&group, |group_answers, answers| {
+                group_answers.intersection(answers).cloned().collect()
+            })
+        });
 
-    println!("Total = {}", total_part_1);
-    println!("Total = {}", total_part_2);
+    println!("Total = {}", sum_counts(group_answers_1));
+    println!("Total = {}", sum_counts(group_answers_2));
 }
