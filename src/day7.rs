@@ -1,8 +1,8 @@
 use lazy_static::lazy_static;
 use regex::Regex;
+use std::collections::{HashMap, HashSet};
 use std::num::ParseIntError;
 use std::str::FromStr;
-use std::collections::{HashMap, HashSet};
 
 type Color = String;
 
@@ -43,57 +43,88 @@ impl FromStr for Rule {
     }
 }
 
-type PermittedContainers = HashMap<Color, HashSet<Color>>;
+struct Ruleset {
+    required: HashMap<Color, Vec<(usize, Color)>>,
+    permitted: HashMap<Color, HashSet<Color>>,
+}
 
-fn add_permission(permitted: &mut PermittedContainers, contained: &Color, container: &Color) {
-    match permitted.get_mut(contained) {
-        Some(v) => {
-            v.insert(container.clone());
+impl Ruleset {
+    fn new() -> Self {
+        Ruleset {
+            required: HashMap::new(),
+            permitted: HashMap::new(),
         }
-        None => {
-            let mut v = HashSet::new();
-            v.insert(container.clone());
-            permitted.insert(contained.clone(), v);
+    }
+
+    fn add_rule(&mut self, rule: Rule) {
+        for (_count, color) in &rule.contains {
+            self.add_permission(color, &rule.color);
+            self.required
+                .insert(rule.color.clone(), rule.contains.clone());
+        }
+    }
+
+    fn add_permission(&mut self, contained: &Color, container: &Color) {
+        match self.permitted.get_mut(contained) {
+            Some(v) => {
+                v.insert(container.clone());
+            }
+            None => {
+                let mut v = HashSet::new();
+                v.insert(container.clone());
+                self.permitted.insert(contained.clone(), v);
+            }
+        }
+    }
+
+    fn allowed_containers(&self, color: &str) -> HashSet<Color> {
+        let mut allowed = HashSet::new();
+        if let Some(rules) = self.permitted.get(color) {
+            for container in rules {
+                allowed.insert(container.clone());
+                allowed = allowed
+                    .union(&self.allowed_containers(container))
+                    .cloned()
+                    .collect();
+            }
+        }
+        allowed
+    }
+
+    fn required_contents(&self, color: &str) -> usize {
+        match self.required.get(color) {
+            Some(contents) => contents
+                .iter()
+                .map(|(count, color)| count * (1 + self.required_contents(color)))
+                .sum(),
+            None => 0,
         }
     }
 }
 
-fn allowed_containers(permitted: &PermittedContainers, color: &Color) -> HashSet<Color> {
-    let mut allowed = HashSet::new();
-    if let Some(rules) = permitted.get(color) {
-        for container in rules {
-            allowed.insert(container.clone());
-            allowed = allowed.union(&allowed_containers(permitted, container)).cloned().collect();
-        }
-    }
-    allowed
-}
+impl FromStr for Ruleset {
+    type Err = ParseIntError;
 
-type Ruleset = HashMap<Color, Vec<(usize, Color)>>;
-
-fn required_contents(ruleset: &Ruleset, color: &Color) -> usize {
-    match ruleset.get(color) {
-        Some(contents) => {
-            contents.iter().map(|(count, color)| count * (1 + required_contents(ruleset, color))).sum()
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut ruleset = Self::new();
+        for line in s.lines() {
+            let rule = line.parse::<Rule>()?;
+            ruleset.add_rule(rule)
         }
-        None =>
-            0
+        Ok(ruleset)
     }
 }
 
 fn main() {
     let content = std::fs::read_to_string("input/day7").unwrap();
-    let mut permitted : PermittedContainers = HashMap::new();
-    let mut ruleset : Ruleset = HashMap::new();
+    let ruleset: Ruleset = content.parse::<Ruleset>().unwrap();
 
-    for line in content.lines() {
-        let rule = line.parse::<Rule>().unwrap();
-        for (_count, color) in &rule.contains {
-            add_permission(&mut permitted, color, &rule.color);
-            ruleset.insert(rule.color.clone(), rule.contains.clone());
-        }
-    }
-
-    println!("Shiny gold: {}", allowed_containers(&permitted, &"shiny gold".to_string()).len()); 
-    println!("My bag must contain: {}", required_contents(&ruleset, &"shiny gold".to_string()))
+    println!(
+        "Shiny gold: {}",
+        ruleset.allowed_containers("shiny gold").len()
+    );
+    println!(
+        "My bag must contain: {}",
+        ruleset.required_contents("shiny gold")
+    )
 }
