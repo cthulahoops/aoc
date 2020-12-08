@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::num::ParseIntError;
 use std::str::FromStr;
 
 #[derive(Debug, Copy, Clone)]
@@ -10,14 +9,14 @@ enum Instruction {
 }
 
 impl FromStr for Instruction {
-    type Err = &'static str;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "nop" => Ok(Instruction::Nop),
             "acc" => Ok(Instruction::Acc),
             "jmp" => Ok(Instruction::Jmp),
-            _ => Err("Invalid instruction"),
+            _ => Err(anyhow::anyhow!("Invalid instruction: {:?}", s)),
         }
     }
 }
@@ -28,18 +27,24 @@ struct Program {
 }
 
 impl FromStr for Program {
-    type Err = ParseIntError;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
         let program = s
             .lines()
             .map(|x| {
                 let mut parts = x.split(" ");
-                let instruction = parts.next().unwrap().parse::<Instruction>().unwrap();
-                let value = parts.next().unwrap().parse::<i64>().unwrap();
-                (instruction, value)
+                let instruction = parts
+                    .next()
+                    .ok_or(anyhow::anyhow!("Missing instruction"))?
+                    .parse::<Instruction>()?;
+                let value = parts
+                    .next()
+                    .ok_or(anyhow::anyhow!("Missing value"))?
+                    .parse::<i64>()?;
+                Ok((instruction, value))
             })
-            .collect();
+            .collect::<Result<Vec<(Instruction, i64)>, anyhow::Error>>()?;
         Ok(Program {
             instructions: program,
         })
@@ -113,11 +118,11 @@ fn change_instruction(program: &Program, at: usize) -> Option<Program> {
     None
 }
 
-fn main() {
-    let content = std::fs::read_to_string("input/day8").unwrap();
-    let program = content.parse::<Program>().unwrap();
+fn main() -> anyhow::Result<()> {
+    let content = std::fs::read_to_string("input/day8")?;
+    let program = content.parse::<Program>()?;
 
-    let loop_acc = try_halts(program.clone()).unwrap_err();
+    let loop_acc = try_halts(program.clone()).expect_err("Program halted unexpectedly");
     println!("Part 1 = {}", loop_acc);
 
     for i in 0..program.instructions.len() {
@@ -128,4 +133,6 @@ fn main() {
             }
         }
     }
+
+    Ok(())
 }
