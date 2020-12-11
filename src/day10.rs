@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::Hash;
 
-fn parse_sorted_numbers(contents: &str) -> Vec<i64> {
-    let mut numbers: Vec<i64> = contents.lines().map(|x| x.parse().unwrap()).collect();
+fn read_sorted_numbers(filename: &str) -> Vec<i64> {
+    let mut numbers: Vec<i64> = aoclib::read_numbers(filename).unwrap();
     numbers.sort();
     numbers
 }
@@ -76,8 +76,7 @@ where
 }
 
 fn main() {
-    let contents = std::fs::read_to_string("input/day10").unwrap();
-    let numbers = parse_sorted_numbers(&contents);
+    let numbers = read_sorted_numbers("input/day10");
 
     let mut last = 0;
     let mut ones = 0;

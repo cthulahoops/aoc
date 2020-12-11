@@ -20,3 +20,22 @@ impl Vec2<usize> {
         }
     }
 }
+
+pub fn parse_lines<F, R>(s: &str, parse: F) -> anyhow::Result<Vec<R>>
+where
+    F: Fn(&str) -> anyhow::Result<R>,
+{
+    s.lines().map(parse).collect()
+}
+
+pub fn read_parsed_lines<F, R>(filename: &str, parse: F) -> anyhow::Result<Vec<R>>
+where
+    F: Fn(&str) -> anyhow::Result<R>,
+{
+    let content = std::fs::read_to_string(filename)?;
+    parse_lines(&content, parse)
+}
+
+pub fn read_numbers(filename: &str) -> anyhow::Result<Vec<i64>> {
+    read_parsed_lines(filename, |x| Ok(x.parse().unwrap()))
+}

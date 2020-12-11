@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
-use std::str::FromStr;
 
+use aoclib::read_parsed_lines;
 use aoclib::Vec2;
 
 #[derive(PartialEq, Clone, Copy)]
@@ -16,28 +16,15 @@ struct Grid {
     size: Vec2<i64>,
 }
 
-impl FromStr for Grid {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
-        let seats: Vec<Vec<Location>> = s
-            .lines()
-            .map(|row| {
-                row.chars()
-                    .map(|seat| match seat {
-                        'L' => Location::EmptySeat,
-                        '#' => Location::OccupiedSeat,
-                        '.' => Location::Floor,
-                        _ => panic!("Handle this error better!"),
-                    })
-                    .collect()
-            })
-            .collect();
-
-        let size = Vec2::new(seats[0].len() as i64, seats.len() as i64);
-
-        Ok(Grid { seats, size })
-    }
+fn parse_line(s: &str) -> anyhow::Result<Vec<Location>> {
+    s.chars()
+        .map(|seat| match seat {
+            'L' => Ok(Location::EmptySeat),
+            '#' => Ok(Location::OccupiedSeat),
+            '.' => Ok(Location::Floor),
+            other => Err(anyhow::anyhow!("Unrecognised character: {}", other)),
+        })
+        .collect()
 }
 
 lazy_static! {
@@ -54,6 +41,11 @@ lazy_static! {
 }
 
 impl Grid {
+    fn new(seats: Vec<Vec<Location>>) -> Self {
+        let size = Vec2::new(seats[0].len() as i64, seats.len() as i64);
+        Grid { seats, size }
+    }
+
     fn update(&self) -> Self {
         self.map(|seat, occupied| match self.occupied_neighbours(seat) {
             0 => true,
@@ -178,8 +170,8 @@ fn part2(mut grid: Grid) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let content = std::fs::read_to_string("input/day11")?;
-    let grid = content.parse::<Grid>()?;
+    let seats = read_parsed_lines("input/day11", parse_line)?;
+    let grid = Grid::new(seats);
 
     part1(grid.clone());
     part2(grid.clone());

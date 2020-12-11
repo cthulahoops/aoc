@@ -28,9 +28,8 @@ fn invalid_number(numbers: &Vec<i64>) -> i64 {
     panic!("Nothing was invalid!");
 }
 
-fn main() {
-    let contents = std::fs::read_to_string("input/day9").unwrap();
-    let numbers: Vec<i64> = contents.lines().map(|x| x.parse().unwrap()).collect();
+fn main() -> anyhow::Result<()> {
+    let numbers = aoclib::read_numbers("input/day9")?;
 
     let invalid_number = invalid_number(&numbers);
     println!("{}", invalid_number);
@@ -60,4 +59,6 @@ fn main() {
             }
         }
     }
+
+    Ok(())
 }
