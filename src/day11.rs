@@ -7,7 +7,7 @@ use aoclib::Vec2;
 enum Location {
     EmptySeat,
     OccupiedSeat,
-    Floor
+    Floor,
 }
 
 #[derive(PartialEq, Clone)]
@@ -20,15 +20,19 @@ impl FromStr for Grid {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, anyhow::Error> {
-        let seats : Vec<Vec<Location>> = s.lines().map(|row|
-            row.chars().map(|seat|
-                match seat {
-                    'L' => Location::EmptySeat,
-                    '#' => Location::OccupiedSeat,
-                    '.' => Location::Floor,
-                    _ => panic!("Handle this error better!")
-                }
-            ).collect()).collect();
+        let seats: Vec<Vec<Location>> = s
+            .lines()
+            .map(|row| {
+                row.chars()
+                    .map(|seat| match seat {
+                        'L' => Location::EmptySeat,
+                        '#' => Location::OccupiedSeat,
+                        '.' => Location::Floor,
+                        _ => panic!("Handle this error better!"),
+                    })
+                    .collect()
+            })
+            .collect();
 
         let size = Vec2::new(seats[0].len() as i64, seats.len() as i64);
 
@@ -70,14 +74,29 @@ impl Grid {
     where
         F: Fn(Vec2<i64>, bool) -> bool,
     {
-        let new_seats = self.seats.iter().enumerate().map(|(y, row)| {
-            row.iter().enumerate().map(|(x, location)| {
-                match location {
-                    Location::Floor => Location::Floor,
-                    other => if rule(Vec2::new(x as i64, y as i64), *other == Location::OccupiedSeat) { Location::OccupiedSeat } else { Location::EmptySeat },
-                }
-            }).collect()
-        }).collect();
+        let new_seats = self
+            .seats
+            .iter()
+            .enumerate()
+            .map(|(y, row)| {
+                row.iter()
+                    .enumerate()
+                    .map(|(x, location)| match location {
+                        Location::Floor => Location::Floor,
+                        other => {
+                            if rule(
+                                Vec2::new(x as i64, y as i64),
+                                *other == Location::OccupiedSeat,
+                            ) {
+                                Location::OccupiedSeat
+                            } else {
+                                Location::EmptySeat
+                            }
+                        }
+                    })
+                    .collect()
+            })
+            .collect();
 
         Grid {
             seats: new_seats,
@@ -120,7 +139,8 @@ impl Grid {
     }
 
     fn is_occupied(&self, seat: Vec2<i64>) -> bool {
-        self.in_bounds(seat) && self.seats[seat.y as usize][seat.x as usize] == Location::OccupiedSeat
+        self.in_bounds(seat)
+            && self.seats[seat.y as usize][seat.x as usize] == Location::OccupiedSeat
     }
 
     fn count_occupied(&self) -> usize {
