@@ -1,35 +1,21 @@
-use derive_more::Add;
 use std::collections::HashSet;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Add)]
-struct Vec2 {
-    x: usize,
-    y: usize,
-}
-
-impl Vec2 {
-    fn rem_x(self, rhs: usize) -> Self {
-        Vec2 {
-            x: self.x % rhs,
-            y: self.y,
-        }
-    }
-}
+use aoclib::Vec2;
 
 struct Map {
     height: usize,
     width: usize,
-    trees: HashSet<Vec2>,
+    trees: HashSet<Vec2<usize>>,
 }
 
 impl Map {
-    fn has_tree(&self, point: Vec2) -> bool {
+    fn has_tree(&self, point: Vec2<usize>) -> bool {
         self.trees.contains(&point.rem_x(self.width))
     }
 
-    fn attempt_run(&self, velocity: Vec2) -> i64 {
+    fn attempt_run(&self, velocity: Vec2<usize>) -> i64 {
         let mut position = Vec2 { x: 0, y: 0 };
         let mut painful_collisions = 0;
 
