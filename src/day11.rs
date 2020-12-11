@@ -1,12 +1,18 @@
 use lazy_static::lazy_static;
-use std::collections::HashMap;
 use std::str::FromStr;
 
 use aoclib::Vec2;
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
+enum Location {
+    EmptySeat,
+    OccupiedSeat,
+    Floor
+}
+
+#[derive(PartialEq, Clone)]
 struct Grid {
-    seats: HashMap<Vec2<i64>, bool>,
+    seats: Vec<Vec<Location>>,
     size: Vec2<i64>,
 }
 
@@ -14,27 +20,17 @@ impl FromStr for Grid {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, anyhow::Error> {
-        let mut seats = HashMap::new();
-
-        let mut max_y = 0;
-        let mut max_x = 0;
-
-        for (y, row) in s.lines().enumerate() {
-            for (x, seat) in row.chars().enumerate() {
-                if let Some(occupied) = match seat {
-                    'L' => Some(false),
-                    '#' => Some(true),
-                    '.' => None,
-                    _ => return Err(anyhow::anyhow!("Unrecognised character: {}", seat)),
-                } {
-                    seats.insert(Vec2::new(x as i64, y as i64), occupied);
+        let seats : Vec<Vec<Location>> = s.lines().map(|row|
+            row.chars().map(|seat|
+                match seat {
+                    'L' => Location::EmptySeat,
+                    '#' => Location::OccupiedSeat,
+                    '.' => Location::Floor,
+                    _ => panic!("Handle this error better!")
                 }
-                max_x = x;
-            }
-            max_y = y;
-        }
+            ).collect()).collect();
 
-        let size = Vec2::new(max_x as i64, max_y as i64);
+        let size = Vec2::new(seats[0].len() as i64, seats.len() as i64);
 
         Ok(Grid { seats, size })
     }
@@ -55,7 +51,7 @@ lazy_static! {
 
 impl Grid {
     fn update(&self) -> Self {
-        self.map(|&seat, occupied| match self.occupied_neighbours(seat) {
+        self.map(|seat, occupied| match self.occupied_neighbours(seat) {
             0 => true,
             x if x >= 4 => false,
             _ => occupied,
@@ -63,7 +59,7 @@ impl Grid {
     }
 
     fn update2(&self) -> Self {
-        self.map(|&seat, occupied| match self.occupied_seen(seat) {
+        self.map(|seat, occupied| match self.occupied_seen(seat) {
             0 => true,
             x if x >= 5 => false,
             _ => occupied,
@@ -72,12 +68,17 @@ impl Grid {
 
     fn map<F>(&self, rule: F) -> Self
     where
-        F: Fn(&Vec2<i64>, bool) -> bool,
+        F: Fn(Vec2<i64>, bool) -> bool,
     {
-        let mut new_seats: HashMap<Vec2<i64>, bool> = HashMap::new();
-        for (seat, occupied) in self.seats.iter() {
-            new_seats.insert(seat.clone().clone(), rule(seat, occupied.clone()));
-        }
+        let new_seats = self.seats.iter().enumerate().map(|(y, row)| {
+            row.iter().enumerate().map(|(x, location)| {
+                match location {
+                    Location::Floor => Location::Floor,
+                    other => if rule(Vec2::new(x as i64, y as i64), *other == Location::OccupiedSeat) { Location::OccupiedSeat } else { Location::EmptySeat },
+                }
+            }).collect()
+        }).collect();
+
         Grid {
             seats: new_seats,
             size: self.size,
@@ -87,7 +88,7 @@ impl Grid {
     fn occupied_neighbours(&self, seat: Vec2<i64>) -> usize {
         NEIGHBOUR_OFFSETS
             .iter()
-            .filter(|&offset| self.is_occupied(&(seat + offset.clone())))
+            .filter(|&offset| self.is_occupied(seat + offset.clone()))
             .count()
     }
 
@@ -102,27 +103,31 @@ impl Grid {
         let mut seat = seat.clone();
         loop {
             seat = seat + offset;
-            if seat.x < 0 || seat.y < 0 || seat.x > self.size.x || seat.y > self.size.y {
+            if !self.in_bounds(seat) {
                 return false;
             }
 
-            match self.seats.get(&seat) {
-                Some(true) => return true,
-                Some(false) => return false,
-                None => (),
+            match self.seats[seat.y as usize][seat.x as usize] {
+                Location::OccupiedSeat => return true,
+                Location::EmptySeat => return false,
+                Location::Floor => continue,
             }
         }
     }
 
-    fn is_occupied(&self, seat: &Vec2<i64>) -> bool {
-        self.seats.get(seat).unwrap_or(&false).clone()
+    fn in_bounds(&self, seat: Vec2<i64>) -> bool {
+        seat.x >= 0 && seat.y >= 0 && seat.x < self.size.x && seat.y < self.size.y
+    }
+
+    fn is_occupied(&self, seat: Vec2<i64>) -> bool {
+        self.in_bounds(seat) && self.seats[seat.y as usize][seat.x as usize] == Location::OccupiedSeat
     }
 
     fn count_occupied(&self) -> usize {
         self.seats
             .iter()
-            .filter(|(_k, v)| v.clone().clone())
-            .count()
+            .map(|row| row.iter().filter(|&l| *l == Location::OccupiedSeat).count())
+            .sum()
     }
 }
 
