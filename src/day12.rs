@@ -3,13 +3,9 @@ use std::str::FromStr;
 
 #[derive(Clone, Debug)]
 enum Instruction {
-    North,
-    South,
-    East,
-    West,
+    Compass(Vec2<i64>),
     Forward,
-    Left,
-    Right,
+    Turn(i64),
 }
 
 impl FromStr for Instruction {
@@ -17,13 +13,13 @@ impl FromStr for Instruction {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "N" => Ok(Instruction::North),
-            "S" => Ok(Instruction::South),
-            "E" => Ok(Instruction::East),
-            "W" => Ok(Instruction::West),
+            "N" => Ok(Instruction::Compass(Vec2::new(0, -1))),
+            "S" => Ok(Instruction::Compass(Vec2::new(0, 1))),
+            "W" => Ok(Instruction::Compass(Vec2::new(-1, 0))),
+            "E" => Ok(Instruction::Compass(Vec2::new(1,0))),
             "F" => Ok(Instruction::Forward),
-            "L" => Ok(Instruction::Left),
-            "R" => Ok(Instruction::Right),
+            "L" => Ok(Instruction::Turn(-1)),
+            "R" => Ok(Instruction::Turn(1)),
             _ => Err(anyhow::anyhow!("Invalid instruction: {:?}", s)),
         }
     }
@@ -42,52 +38,91 @@ fn parse_line(s: &str) -> anyhow::Result<(Instruction, i64)> {
 }
 
 fn rotate(vec: Vec2<i64>, degrees_clockwise: i64) -> Vec2<i64> {
-    match degrees_clockwise {
+    match degrees_clockwise % 360 {
         0 => vec,
         90 => Vec2::new(-vec.y, vec.x),
         180 => vec * -1,
         270 => Vec2::new(vec.y, -vec.x),
-        _ => panic!("Unexpected number of degrees: {}", degrees_clockwise)
+        x if x < 0 => rotate(vec, x + 360),
+        _ => panic!("Unexpected number of degrees: {}", degrees_clockwise),
+    }
+}
+
+struct Boat {
+    position: Vec2<i64>,
+    direction: Vec2<i64>,
+}
+
+fn part1(
+    Boat {
+        position,
+        direction,
+    }: Boat,
+    command: &(Instruction, i64),
+) -> Boat {
+    let (instruction, value) = command;
+    match instruction {
+        Instruction::Compass(v) => Boat {
+            position: position + *v * value,
+            direction,
+        },
+        Instruction::Forward => Boat {
+            position: position + direction * value,
+            direction,
+        },
+        Instruction::Turn(dir) => Boat {
+            position,
+            direction: rotate(direction, value * dir),
+        },
+    }
+}
+
+fn part2(
+    Boat {
+        position,
+        direction,
+    }: Boat,
+    command: &(Instruction, i64),
+) -> Boat {
+    let (instruction, value) = command;
+    match instruction {
+        Instruction::Compass(v) => Boat {
+            position,
+            direction: direction + *v * value,
+        },
+        Instruction::Forward => Boat {
+            position: position + direction * value,
+            direction,
+        },
+        Instruction::Turn(dir) => Boat {
+            position,
+            direction: rotate(direction, *dir * value),
+        },
     }
 }
 
 fn main() -> anyhow::Result<()> {
     let commands = aoclib::read_parsed_lines("input/day12", parse_line)?;
 
-    let mut position: Vec2<i64> = Vec2::new(0, 0);
-    let mut direction: Vec2<i64> = Vec2::new(1, 0);
+    let boat = commands.iter().fold(
+        Boat {
+            position: Vec2::new(0, 0),
+            direction: Vec2::new(1, 0),
+        },
+        part1,
+    );
 
-    for (instruction, value) in &commands {
-        match instruction {
-            Instruction::North => position = position + Vec2::new(0, -1) * value,
-            Instruction::South => position = position + Vec2::new(0, 1) * value,
-            Instruction::West => position = position + Vec2::new(-1, 0) * value,
-            Instruction::East => position = position + Vec2::new(1, 0) * value,
-            Instruction::Forward => position = position + direction * value,
-            Instruction::Left => direction = rotate(direction, 360 - value),
-            Instruction::Right => direction = rotate(direction, *value),
-        }
-    }
+    println!("Part 1 : Distance: {}", boat.position.manhatten());
 
-    println!("Part 1 : Distance: {}", position.manhatten());
+    let boat = commands.iter().fold(
+        Boat {
+            position: Vec2::new(0, 0),
+            direction: Vec2::new(10, -1),
+        },
+        part2,
+    );
 
-    let mut position: Vec2<i64> = Vec2::new(0, 0);
-    let mut waypoint: Vec2<i64> = Vec2::new(10, -1); 
-
-    for (instruction, value) in &commands {
-        match instruction {
-            Instruction::North => waypoint = waypoint + Vec2::new(0, -1) * value,
-            Instruction::South => waypoint = waypoint + Vec2::new(0, 1) * value,
-            Instruction::West => waypoint = waypoint + Vec2::new(-1, 0) * value,
-            Instruction::East => waypoint = waypoint + Vec2::new(1, 0) * value,
-            Instruction::Forward => position = position + waypoint * value,
-            Instruction::Left => waypoint = rotate(waypoint, 360 - value),
-            Instruction::Right => waypoint = rotate(waypoint, *value),
-        }
-    }
-
-    println!("Part 2 : Distance: {}", position.manhatten());
-
+    println!("Part 2 : Distance: {}", boat.position.manhatten());
 
     Ok(())
 }
