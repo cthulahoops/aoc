@@ -3,6 +3,8 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
+use std::fmt::Display;
+use std::str::FromStr;
 
 #[derive(Copy, Clone, Debug)]
 struct Masked {
@@ -10,10 +12,28 @@ struct Masked {
     value: usize,
 }
 
-impl Masked {
-    #[allow(dead_code)]
-    pub fn format(&self) -> String {
-        (0..36)
+impl FromStr for Masked {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut mask = 0;
+        let mut value = 0;
+        for (i, bit) in s.chars().enumerate() {
+            let x = 1 << (35 - i);
+            match bit {
+                '1' => value |= x,
+                '0' => (),
+                'X' => mask |= x,
+                _ => return Err(anyhow::anyhow!("Invalid character in mask: {}", bit)),
+            }
+        }
+        Ok(Self { mask, value })
+    }
+}
+
+impl Display for Masked {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let s: String = (0..36)
             .rev()
             .map(|i| {
                 if self.mask & (1 << i) != 0 {
@@ -24,7 +44,8 @@ impl Masked {
                     '0'
                 }
             })
-            .collect()
+            .collect();
+        write!(f, "{}", s)
     }
 }
 
@@ -39,37 +60,10 @@ lazy_static! {
     static ref ASSIGN: Regex = Regex::new(r"^mem\[([0-9]+)\] = ([0-9]+)$").unwrap();
 }
 
-// fn parse_bits(s: &str) -> anyhow::Result<i64> {
-//     let length = s.len();
-//     let mut result = 0;
-//     for (i, x) in s.chars().enumerate() {
-//         match x {
-//             '1' => result &= 1 << (length - i),
-//             '0' => (),
-//             _ => return Err(anyhow::anyhow!("Parse error"))
-//         }
-//     }
-//     Ok(result)
-// }
-
 fn parse_line(s: &str) -> anyhow::Result<Command> {
     if let Some(captures) = SET_MASK.captures(s) {
-        let mut bitmask = 0;
-        let mut address = 0;
-        for (i, bit) in captures.get(1).unwrap().as_str().chars().enumerate() {
-            let x = 1 << (35 - i);
-            match bit {
-                '1' => address |= x,
-                '0' => (),
-                'X' => bitmask |= x,
-                _ => return Err(anyhow::anyhow!("Invalid character in mask: {}", bit)),
-            }
-        }
-
-        return Ok(Command::SetMask(Masked {
-            mask: bitmask,
-            value: address,
-        }));
+        let mask = captures.get(1).unwrap().as_str().parse::<Masked>()?;
+        return Ok(Command::SetMask(mask));
     }
 
     if let Some(captures) = ASSIGN.captures(s) {
@@ -111,9 +105,9 @@ fn part1(commands: &Vec<Command>) -> anyhow::Result<usize> {
             Command::SetMask(mask) => machine.mask = *mask,
             Command::Assign(address, value) => {
                 let ones = !machine.mask.mask & machine.mask.value;
-                let zeros = !machine.mask.mask & !machine.mask.value;
+                let not_zeros = machine.mask.mask | machine.mask.value;
 
-                let value = value & !zeros | ones;
+                let value = value & not_zeros | ones;
                 machine.store(*address, value);
             }
         }
@@ -145,7 +139,7 @@ fn part2(commands: &Vec<Command>) -> anyhow::Result<usize> {
     for command in commands {
         match command {
             Command::SetMask(mask) => {
-                machine.mask = mask.clone();
+                machine.mask = *mask;
             }
             Command::Assign(address, value) => {
                 let address = (address | machine.mask.value) & !machine.mask.mask;
