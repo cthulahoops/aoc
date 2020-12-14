@@ -27,12 +27,7 @@ fn earliest_bus(departure_time: i64, buses: &Vec<i64>) -> i64 {
     loop {
         for bus in buses {
             if (departure_time + wait_time) % bus == 0 {
-                println!(
-                    "{} {} {}",
-                    departure_time,
-                    wait_time,
-                    bus
-                );
+                println!("{} {} {}", departure_time, wait_time, bus);
                 return bus * wait_time;
             }
         }
@@ -41,10 +36,13 @@ fn earliest_bus(departure_time: i64, buses: &Vec<i64>) -> i64 {
 }
 
 fn lcm(first: i64, second: i64) -> i64 {
-        first * second / gcd(first, second)
+    first * second / gcd(first, second)
 }
 
-fn min_max<T>(first: T, second: T) -> (T, T) where T: PartialOrd {
+fn min_max<T>(first: T, second: T) -> (T, T)
+where
+    T: PartialOrd,
+{
     if first > second {
         (second, first)
     } else {
@@ -83,10 +81,7 @@ fn combine(a: Repetition, b: &Repetition) -> Repetition {
         if (trial + b.offset) % b.period == 0 {
             println!("Collision at: {}", trial);
             let offset = trial % period;
-            return Repetition {
-                period,
-                offset
-            }
+            return Repetition { period, offset };
         }
     }
 }

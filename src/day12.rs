@@ -16,7 +16,7 @@ impl FromStr for Instruction {
             "N" => Ok(Instruction::Compass(Vec2::new(0, -1))),
             "S" => Ok(Instruction::Compass(Vec2::new(0, 1))),
             "W" => Ok(Instruction::Compass(Vec2::new(-1, 0))),
-            "E" => Ok(Instruction::Compass(Vec2::new(1,0))),
+            "E" => Ok(Instruction::Compass(Vec2::new(1, 0))),
             "F" => Ok(Instruction::Forward),
             "L" => Ok(Instruction::Turn(-1)),
             "R" => Ok(Instruction::Turn(1)),
