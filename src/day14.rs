@@ -4,10 +4,34 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
+#[derive(Copy, Clone, Debug)]
+struct Masked {
+    mask: usize,
+    value: usize,
+}
+
+impl Masked {
+    #[allow(dead_code)]
+    pub fn format(&self) -> String {
+        (0..36)
+            .rev()
+            .map(|i| {
+                if self.mask & (1 << i) != 0 {
+                    'X'
+                } else if self.value & (1 << i) != 0 {
+                    '1'
+                } else {
+                    '0'
+                }
+            })
+            .collect()
+    }
+}
+
 #[derive(Debug)]
 enum Command {
-    SetMask(usize, usize),
-    Assign(usize, i64),
+    SetMask(Masked),
+    Assign(usize, usize),
 }
 
 lazy_static! {
@@ -42,72 +66,63 @@ fn parse_line(s: &str) -> anyhow::Result<Command> {
             }
         }
 
-        return Ok(Command::SetMask(bitmask, address));
+        return Ok(Command::SetMask(Masked {
+            mask: bitmask,
+            value: address,
+        }));
     }
 
     if let Some(captures) = ASSIGN.captures(s) {
         let address = captures.get(1).unwrap().as_str().parse::<usize>().unwrap();
-        let value = captures.get(2).unwrap().as_str().parse::<i64>().unwrap();
+        let value = captures.get(2).unwrap().as_str().parse::<usize>().unwrap();
         return Ok(Command::Assign(address, value));
     }
 
     Err(anyhow::anyhow!("Can't parse: {}", s))
 }
 
-// fn part1(commands: &Vec<Command>) -> anyhow::Result<()> {
-//     let mut mask : Vec<(usize, bool)> = vec![];
-//     let mut memory : HashMap<usize, i64> = HashMap::new();
-
-//     for command in commands {
-//         match command {
-//             Command::SetMask(new_mask) => mask = new_mask.clone(),
-//             Command::Assign(address, mut value) => {
-//                 for (i, bit) in &mask {
-//                     if *bit {
-//                         value |= 1 << i;
-//                     } else {
-//                         value &= !(1 << i);
-//                     }
-//                 }
-//                 memory.insert(*address, value);
-//             }
-//         }
-//     }
-//     println!("{}", memory.into_values().sum::<i64>());
-//     Ok(())
-// }
-
-fn format_mask(floating_mask: usize, address: usize) -> String {
-    (0..36)
-        .rev()
-        .map(|i| {
-            if floating_mask & (1 << i) != 0 {
-                'X'
-            } else if address & (1 << i) != 0 {
-                '1'
-            } else {
-                '0'
-            }
-        })
-        .collect()
+struct Machine {
+    mask: Masked,
+    memory: HashMap<usize, usize>,
 }
 
-fn count_bits(mut x: usize) -> usize {
-    println!("Counting: {}", x);
-    let mut count = 0;
-    while x != 0 {
-        if x & 1 != 0 {
-            count += 1;
+impl Machine {
+    fn new() -> Self {
+        Machine {
+            mask: Masked { mask: !0, value: 0 },
+            memory: HashMap::new(),
         }
-        x = x >> 1
     }
-    count
+
+    fn store(&mut self, key: usize, value: usize) {
+        self.memory.insert(key, value);
+    }
+
+    fn sum_values(&self) -> usize {
+        self.memory.clone().into_values().sum()
+    }
+}
+
+fn part1(commands: &Vec<Command>) -> anyhow::Result<usize> {
+    let mut machine = Machine::new();
+
+    for command in commands {
+        match command {
+            Command::SetMask(mask) => machine.mask = *mask,
+            Command::Assign(address, value) => {
+                let ones = !machine.mask.mask & machine.mask.value;
+                let zeros = !machine.mask.mask & !machine.mask.value;
+
+                let value = value & !zeros | ones;
+                machine.store(*address, value);
+            }
+        }
+    }
+    Ok(machine.sum_values())
 }
 
 fn expand_addresses(mask: usize, address: usize) -> Vec<usize> {
     let mut result = vec![address];
-
-    println!("Expand: {}, {}", mask, address);
 
     for i in 0..36 {
         let x = 1 << i;
@@ -124,48 +139,33 @@ fn expand_addresses(mask: usize, address: usize) -> Vec<usize> {
     result
 }
 
-fn part2(commands: &Vec<Command>) -> anyhow::Result<()> {
-    let mut mask: (usize, usize) = (0, 0);
-    let mut memory: HashMap<usize, i64> = HashMap::new();
+fn part2(commands: &Vec<Command>) -> anyhow::Result<usize> {
+    let mut machine = Machine::new();
 
     for command in commands {
-        println!("Command: {:?}", command);
         match command {
-            Command::SetMask(bitmask, address) => {
-                //   mask = new_mask.clone();
-                mask = (*bitmask, *address);
-                println!(
-                    "Set: {}, {}, {}",
-                    bitmask,
-                    address,
-                    format_mask(*bitmask, *address)
-                );
+            Command::SetMask(mask) => {
+                machine.mask = mask.clone();
             }
             Command::Assign(address, value) => {
-                let address = (address | mask.1) & !mask.0;
+                let address = (address | machine.mask.value) & !machine.mask.mask;
 
-                println!("{} = {}", format_mask(mask.0, address | mask.1), value);
-
-                for address in expand_addresses(mask.0, address | mask.1) {
-                    println!("{} <- {}", address, value);
-                    memory.insert(address, *value);
+                for address in expand_addresses(machine.mask.mask, address | machine.mask.value) {
+                    // println!("{} <- {}", address, value);
+                    machine.store(address, *value);
                 }
             }
         }
     }
 
-    println!("Done, summing.");
-
-    println!("{}", memory.into_values().sum::<i64>());
-
-    Ok(())
+    Ok(machine.sum_values())
 }
 
 fn main() -> anyhow::Result<()> {
     let commands = aoclib::read_parsed_lines("input/day14", parse_line)?;
 
-    // part1(&commands)?;
-    part2(&commands)?;
+    println!("Part 1 = {}", part1(&commands)?);
+    println!("Part 2 = {}", part2(&commands)?);
 
     Ok(())
 }
