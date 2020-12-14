@@ -142,10 +142,8 @@ fn part2(commands: &Vec<Command>) -> anyhow::Result<usize> {
                 machine.mask = *mask;
             }
             Command::Assign(address, value) => {
-                let address = (address | machine.mask.value) & !machine.mask.mask;
-
-                for address in expand_addresses(machine.mask.mask, address | machine.mask.value) {
-                    // println!("{} <- {}", address, value);
+                let address = address | machine.mask.value;
+                for address in expand_addresses(machine.mask.mask, address) {
                     machine.store(address, *value);
                 }
             }
