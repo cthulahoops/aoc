@@ -27,6 +27,33 @@ impl Vec2<usize> {
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Add, Mul)]
+pub struct Vec3<T> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+}
+
+impl<T> Vec3<T> {
+    pub fn new(x: T, y: T, z: T) -> Self {
+        Vec3 { x, y, z }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Add, Mul)]
+pub struct Vec4<T> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+    pub w: T,
+}
+
+impl<T> Vec4<T> {
+    pub fn new(x: T, y: T, z: T, w: T) -> Self {
+        Vec4 { x, y, z, w }
+    }
+}
+
 pub fn parse_lines<F, R>(s: &str, parse: F) -> anyhow::Result<Vec<R>>
 where
     F: Fn(&str) -> anyhow::Result<R>,
