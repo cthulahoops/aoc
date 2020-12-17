@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
     let rows = aoclib::read_parsed_lines("input/day17", parse_line)?;
 
     let conway : HashSet<Vec3<i64>> = rows_to_grid(rows.clone());
-    let result = (0..6).fold(conway.clone(), |a, _i| step(&a));
+    let result = (0..6).fold(conway, |a, _i| step(&a));
     println!("Part 1 = {}", result.len());
 
     let conway : HashSet<Vec4<i64>> = rows_to_grid(rows);
