@@ -5,8 +5,11 @@ lazy_static! {
     static ref PAREN: Regex = Regex::new(r"\((([0-9]+ [+*] )+[0-9]+)\)").unwrap();
 }
 
-fn replacer(captures: &Captures) -> String {
-    eval_simple_arith(captures.get(1).unwrap().as_str())
+fn replacer<F>(evaluator: F, captures: &Captures) -> String
+where
+    F: Fn(&str) -> String,
+{
+    evaluator(captures.get(1).unwrap().as_str())
 }
 
 fn eval_simple_arith(s: &str) -> String {
@@ -32,10 +35,6 @@ fn eval_simple_arith(s: &str) -> String {
     }
 
     total.to_string()
-}
-
-fn replacer2(captures: &Captures) -> String {
-    eval_prio_additions(captures.get(1).unwrap().as_str())
 }
 
 enum Op {
@@ -77,31 +76,33 @@ fn eval_prio_additions(s: &str) -> String {
     result.to_string()
 }
 
-fn eval_expression(s: &str) -> i64 {
+fn eval_expression(evaluator: fn(&str) -> String, s: &str) -> i64 {
     let mut input = s.to_string();
     while input.contains('(') {
-        input = PAREN.replace_all(&input, replacer).to_string();
+        input = PAREN
+            .replace_all(&input, |c: &Captures| replacer(evaluator, c))
+            .to_string();
     }
-    eval_simple_arith(&input).parse::<i64>().unwrap()
+    evaluator(&input).parse::<i64>().unwrap()
 }
 
-fn eval_expression2(s: &str) -> i64 {
-    let mut input = s.to_string();
-    while input.contains('(') {
-        input = PAREN.replace_all(&input, replacer2).to_string();
-    }
-    eval_prio_additions(&input).parse::<i64>().unwrap()
+fn eval1(s: &str) -> i64 {
+    eval_expression(eval_simple_arith, s)
+}
+
+fn eval2(s: &str) -> i64 {
+    eval_expression(eval_prio_additions, s)
 }
 
 fn main() -> anyhow::Result<()> {
     let contents = std::fs::read_to_string("input/day18").unwrap();
 
-    let part1: i64 = contents.lines().map(eval_expression).sum();
+    let part1: i64 = contents.lines().map(eval1).sum();
     println!("Part 1 = {}", part1);
 
-    println!("Example: {}", eval_expression2("1 + 2 * 3 + 4 * 5 + 6"));
+    println!("Example: {}", eval2("1 + 2 * 3 + 4 * 5 + 6"));
 
-    let part2: i64 = contents.lines().map(eval_expression2).sum();
+    let part2: i64 = contents.lines().map(eval2).sum();
     println!("Part 2 = {}", part2);
 
     Ok(())
