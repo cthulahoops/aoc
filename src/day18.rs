@@ -7,13 +7,6 @@ lazy_static! {
     static ref ADDITION: Regex = Regex::new(r"(\d+) (\+) (\d+)").unwrap();
 }
 
-fn replacer<F>(evaluator: F, captures: &Captures) -> String
-where
-    F: Fn(&str) -> String,
-{
-    evaluator(captures.get(1).unwrap().as_str())
-}
-
 fn eval_single(captures: &Captures) -> String {
     let a = captures.get(1).unwrap().as_str().parse::<i64>().unwrap();
     let op = captures.get(2).unwrap().as_str();
@@ -63,7 +56,7 @@ fn eval_expression(evaluator: fn(&str) -> String, s: &str) -> i64 {
     let input = run_until_stable(
         |input| {
             PAREN
-                .replace_all(&input, |c: &Captures| replacer(evaluator, c))
+                .replace_all(&input, |c: &Captures| evaluator(c.get(1).unwrap().as_str()))
                 .to_string()
         },
         s,
