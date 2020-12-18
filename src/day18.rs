@@ -3,6 +3,8 @@ use regex::{Captures, Regex};
 
 lazy_static! {
     static ref PAREN: Regex = Regex::new(r"\((([0-9]+ [+*] )+[0-9]+)\)").unwrap();
+    static ref LEFT_MOST: Regex = Regex::new(r"^(\d+) ([+*]) (\d+)").unwrap();
+    static ref ADDITION: Regex = Regex::new(r"(\d+) (\+) (\d+)").unwrap();
 }
 
 fn replacer<F>(evaluator: F, captures: &Captures) -> String
@@ -12,77 +14,60 @@ where
     evaluator(captures.get(1).unwrap().as_str())
 }
 
-fn eval_simple_arith(s: &str) -> String {
-    let mut tokens = s.split(' ');
+fn eval_single(captures: &Captures) -> String {
+    let a = captures.get(1).unwrap().as_str().parse::<i64>().unwrap();
+    let op = captures.get(2).unwrap().as_str();
+    let b = captures.get(3).unwrap().as_str().parse::<i64>().unwrap();
 
-    let mut total: i64 = tokens.next().unwrap().parse::<i64>().unwrap();
-
-    loop {
-        let f = match tokens.next() {
-            Some("*") => |a, b| a * b,
-            Some("+") => |a, b| a + b,
-            Some(_) => {
-                panic!("Impossible!");
-            }
-            None => {
-                break;
-            }
-        };
-
-        let b: i64 = tokens.next().unwrap().parse::<i64>().unwrap();
-
-        total = f(total, b);
+    match op {
+        "*" => (a * b).to_string(),
+        "+" => (a + b).to_string(),
+        _ => panic!("Not implemented"),
     }
-
-    total.to_string()
+    .to_string()
 }
 
-enum Op {
-    Add,
-    Mul,
+fn eval_left_most(s: &str) -> String {
+    LEFT_MOST.replace(s, eval_single).to_string()
+}
+
+fn eval_simple_arith(s: &str) -> String {
+    run_until_stable(eval_left_most, s)
+}
+
+fn eval_addition(s: &str) -> String {
+    ADDITION.replace_all(s, eval_single).to_string()
 }
 
 fn eval_prio_additions(s: &str) -> String {
-    let mut tokens = s.split(' ');
+    let added = run_until_stable(eval_addition, s);
+    eval_simple_arith(&added)
+}
 
-    let mut sums: Vec<i64> = vec![];
-    let mut total: i64 = tokens.next().unwrap().parse::<i64>().unwrap();
-
+fn run_until_stable<F>(f: F, s: &str) -> String
+where
+    F: Fn(&str) -> String,
+{
+    let mut input = s.to_string();
     loop {
-        let op = match tokens.next() {
-            Some("+") => Op::Add,
-            Some("*") => Op::Mul,
-            Some(_) => {
-                panic!("Impossible!");
-            }
-            None => {
-                break;
-            }
-        };
-        let b: i64 = tokens.next().unwrap().parse::<i64>().unwrap();
-
-        match op {
-            Op::Add => total += b,
-            Op::Mul => {
-                sums.push(total);
-                total = b
-            }
+        let new_input = f(&input);
+        if new_input == input {
+            break;
         }
+        input = new_input;
     }
-    sums.push(total);
-
-    let result: i64 = sums.iter().product();
-
-    result.to_string()
+    return input;
 }
 
 fn eval_expression(evaluator: fn(&str) -> String, s: &str) -> i64 {
-    let mut input = s.to_string();
-    while input.contains('(') {
-        input = PAREN
-            .replace_all(&input, |c: &Captures| replacer(evaluator, c))
-            .to_string();
-    }
+    let input = run_until_stable(
+        |input| {
+            PAREN
+                .replace_all(&input, |c: &Captures| replacer(evaluator, c))
+                .to_string()
+        },
+        s,
+    );
     evaluator(&input).parse::<i64>().unwrap()
 }
 
