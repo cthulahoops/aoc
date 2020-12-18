@@ -1,7 +1,7 @@
-use aoclib::{Vec4, Vec3, Neighbours, FromPair};
+use aoclib::{FromPair, Neighbours, Vec3, Vec4};
 use std::collections::{HashMap, HashSet};
-use std::ops::Add;
 use std::hash::Hash;
+use std::ops::Add;
 
 fn parse_line(s: &str) -> anyhow::Result<HashSet<usize>> {
     let row = s
@@ -12,7 +12,10 @@ fn parse_line(s: &str) -> anyhow::Result<HashSet<usize>> {
     Ok(row)
 }
 
-fn rows_to_grid<T>(rows: Vec<HashSet<usize>>) -> HashSet<T> where T: Eq + FromPair + Hash {
+fn rows_to_grid<T>(rows: Vec<HashSet<usize>>) -> HashSet<T>
+where
+    T: Eq + FromPair + Hash,
+{
     let mut result = HashSet::new();
     for (y, row) in rows.iter().enumerate() {
         for x in row {
@@ -22,7 +25,10 @@ fn rows_to_grid<T>(rows: Vec<HashSet<usize>>) -> HashSet<T> where T: Eq + FromPa
     result
 }
 
-fn step<T>(input: &HashSet<T>) -> HashSet<T> where T: Add<Output=T> + Hash + Eq + Copy + Neighbours {
+fn step<T>(input: &HashSet<T>) -> HashSet<T>
+where
+    T: Add<Output = T> + Hash + Eq + Copy + Neighbours,
+{
     let mut heat = HashMap::new();
 
     for cube in input {
@@ -48,11 +54,11 @@ fn step<T>(input: &HashSet<T>) -> HashSet<T> where T: Add<Output=T> + Hash + Eq 
 fn main() -> anyhow::Result<()> {
     let rows = aoclib::read_parsed_lines("input/day17", parse_line)?;
 
-    let conway : HashSet<Vec3<i64>> = rows_to_grid(rows.clone());
+    let conway: HashSet<Vec3<i64>> = rows_to_grid(rows.clone());
     let result = (0..6).fold(conway, |a, _i| step(&a));
     println!("Part 1 = {}", result.len());
 
-    let conway : HashSet<Vec4<i64>> = rows_to_grid(rows);
+    let conway: HashSet<Vec4<i64>> = rows_to_grid(rows);
     let result = (0..6).fold(conway, |a, _i| step(&a));
     println!("Part 2 = {}", result.len());
 

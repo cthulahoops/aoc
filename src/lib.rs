@@ -6,7 +6,9 @@ pub trait FromPair {
 }
 
 pub trait Neighbours {
-    fn neighbours(&self) -> Vec<Self> where Self: Sized;
+    fn neighbours(&self) -> Vec<Self>
+    where
+        Self: Sized;
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Add, Mul)]
