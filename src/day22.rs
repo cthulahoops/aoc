@@ -99,11 +99,11 @@ impl RecursiveGame {
             println!("=== Round {} ===", turn);
             turn += 1;
 
-            if seen.contains(&(self.player1.clone(), self.player2.clone())) {
+            if seen.contains(&self.player1) {
                 return Player::One;
             }
 
-            seen.insert((self.player1.clone(), self.player2.clone()));
+            seen.insert(self.player1.clone());
 
             self.step();
 
