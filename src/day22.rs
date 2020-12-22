@@ -92,20 +92,18 @@ impl RecursiveGame {
     }
 
     fn run(&mut self) -> Player {
-        let mut seen1 = HashSet::new();
-        let mut seen2 = HashSet::new();
+        let mut seen = HashSet::new();
 
         let mut turn = 1;
         while !self.game_over() {
             println!("=== Round {} ===", turn);
             turn += 1;
 
-            if seen1.contains(&self.player1) || seen2.contains(&self.player2) {
+            if seen.contains(&(self.player1.clone(), self.player2.clone())) {
                 return Player::One;
             }
 
-            seen1.insert(self.player1.clone());
-            seen2.insert(self.player2.clone());
+            seen.insert((self.player1.clone(), self.player2.clone()));
 
             self.step();
 
