@@ -1,196 +1,133 @@
-use std::collections::VecDeque;
 use std::collections::HashMap;
 
 struct Cycle {
-  edges: HashMap<usize, usize>
+    edges: HashMap<usize, usize>,
+    max_value: usize,
 }
 
-fn find(input: &Vec<usize>, value: usize) -> Option<usize> {
-    input.iter().position(|x| *x == value)
-}
+impl Cycle {
+    fn new(input: &Vec<usize>) -> Self {
+        let mut edges: HashMap<usize, usize> = HashMap::new();
 
-// fn find_destination(input: &Vec<usize>, mut n: usize) -> usize {
-//     loop {
-//         match find(input, n) {
-//             Some(i) => return i,
-//             None => if n > 1 { n -= 1 } else { n = 9 }
-//         }
-//     }
-// }
-//
-
-#[derive(Debug)]
-struct ZipThing {
-  left: VecDeque<usize>,
-  current: usize,
-  right: VecDeque<usize>
-}
-
-impl ZipThing {
-  fn new(input: &Vec<usize>) -> Self {
-    let mut iter = input.iter();
-    let first = iter.next().unwrap();
-    ZipThing { left: VecDeque::new(), current: *first, right: iter.cloned().collect() }
-  }
-
-  fn pop_next(&mut self) -> usize {
-    match self.right.pop_front() {
-      Some(value) => value,
-      None => self.left.pop_front().unwrap()
-    }
-  }
-
-  fn insert(&mut self, value: usize) {
-    self.right.push_front(value)
-  }
-
-  fn insert_many(&mut self, values: &Vec<usize>) {
-    for x in values.iter().rev() {
-      self.insert(*x)
-    }
-  }
-
-  fn take3(&mut self) -> Vec<usize> {
-    vec![
-      self.pop_next(),
-      self.pop_next(),
-      self.pop_next()
-    ]
-  }
-
-  fn advance(&mut self) {
-    self.left.push_back(self.current);
-    self.current = self.pop_next();
-  }
-
-  fn find(&mut self, value: usize) {
-    if value == self.current {
-      return
-    }
-    match self.left.iter().position(|x| *x == value) {
-      Some(idx) => {
-        let mut mv_right = self.left.split_off(idx);
-        self.right.push_front(self.current);
-        self.current = mv_right.pop_front().unwrap();
-        for x in mv_right.iter().rev() {
-          self.right.push_front(*x)
+        let mut iter = input.iter();
+        let first = iter.next().unwrap();
+        let mut last: usize = *first;
+        let mut max_value: usize = *first;
+        for x in iter {
+            if *x > max_value {
+                max_value = *x
+            }
+            edges.insert(last, *x);
+            last = *x;
         }
-      }
-      None => {
-        let idx = self.right.iter().position(|x| *x == value).unwrap();
-        let mut new_right = self.right.split_off(idx);
-        let ref mv_left = self.right;
+        edges.insert(last, *first);
 
-        self.left.push_back(self.current);
-        self.current = new_right.pop_front().unwrap();
-        for x in mv_left {
-          self.left.push_back(*x)
+        Cycle { edges, max_value }
+    }
+
+    fn take_at(&mut self, value: usize) -> usize {
+        let result = self.edges.remove(&value).unwrap();
+        let following = self.edges.remove(&result).unwrap();
+        self.edges.insert(value, following);
+        result
+    }
+
+    fn take3(&mut self, value: usize) -> Vec<usize> {
+        vec![
+            self.take_at(value),
+            self.take_at(value),
+            self.take_at(value),
+        ]
+    }
+
+    fn insert(&mut self, at: usize, value: usize) {
+        let following = self.edges.remove(&at).unwrap();
+        self.edges.insert(at, value);
+        self.edges.insert(value, following);
+    }
+
+    fn insert_many(&mut self, at: usize, values: Vec<usize>) {
+        for x in values.iter().rev() {
+            self.insert(at, *x)
         }
-        self.right = new_right;
-      }
     }
-  }
-    
+
+    fn display(&self) {
+        let mut value = 1;
+        loop {
+            print!("{} ", value);
+            value = self.edges[&value];
+            if value == 1 {
+                break;
+            }
+        }
+        println!("");
+    }
+
+    fn contains(&self, value: usize) -> bool {
+        self.edges.contains_key(&value)
+    }
+
+    fn next(&self, at: usize) -> usize {
+        self.edges[&at]
+    }
 }
 
+fn do_step(cycle: &mut Cycle, current_value: usize) -> usize {
+    // println!("Current: {}", current_value);
+    let picked_up = cycle.take3(current_value);
 
-fn find_local(input: &Vec<usize>, value: usize, hint: usize) -> usize {
-  if input[hint] == value {
-    return hint
-  }
+    // println!("Picked up: {:?}", picked_up);
+    // cycle.display();
 
-  let mut i = 1;
-  loop {
-    if hint + i < input.len() && input[hint + i] == value {
-      return hint + i;
-    }
-    if hint > i && input[hint - i] == value {
-      return hint - i;
-    }
-    
-    i += 1
-  }
-}
-
-fn do_step(zt: &mut ZipThing) {
-  let current = zt.current;
-    let picked_up = zt.take3();
-
-    let mut destination_value = if current > 1 { current - 1 } else{ 1_000_000 };
-    while find(&picked_up, destination_value).is_some() {
+    let mut destination_value = if current_value > 1 {
+        current_value - 1
+    } else {
+        cycle.max_value
+    };
+    while !cycle.contains(destination_value) {
         if destination_value > 1 {
             destination_value = destination_value - 1;
         } else {
-            destination_value = 1_000_000; // Max VALUE!
+            destination_value = cycle.max_value;
         }
     }
 
-    zt.find(destination_value);
+    // println!("Destination value: {}", destination_value);
 
-    zt.insert_many(&picked_up);
-    // println!("{:?}", zt);
-    zt.find(current);
-    zt.advance();
+    cycle.insert_many(destination_value, picked_up);
+    cycle.next(current_value)
 }
 
+fn run_game(input: Vec<usize>, rounds: usize) -> Cycle {
+    let mut cycle = Cycle::new(&input);
 
-fn print_cups(cups: &Vec<usize>, current: usize) {
-    for (i, x) in cups.iter().enumerate() {
-        if i == current {
-            print!("({}) ", x);
-        } else {
-            print!("{} ", x);
-        }
+    //  cycle.display();
+
+    let mut current_value = input[0];
+    for _round in 1..rounds + 1 {
+        // println!("\nRound: {}", round);
+        current_value = do_step(&mut cycle, current_value);
+        //      cycle.display();
     }
-    println!("");
+    cycle
 }
 
 fn main() {
-    // let mut input = vec![3,8,9,1,2,5,4,6,7];
-    let mut input = vec![3,2,6,5,1,9,4,7,8];
-    for x in 10..1_000_000 + 1 {
-          input.push(x);
-    }
-    let mut zt = ZipThing::new(&input);
-    
+    let input = vec![3, 8, 9, 1, 2, 5, 4, 6, 7];
+    // let mut input = vec![3,2,6,5,1,9,4,7,8];
     // for x in 10..1_000_000 + 1 {
-    //      input.push(x);
+    //       input.push(x);
     // }
-    //
-    println!("ZT: {:?}", zt);
-    for i in 0..10_000_000 {
-      if i % 10000 == 0{
-        println!("\nRound: {}", i + 1);
-      }
-      do_step(&mut zt);
+    let cycle = run_game(input, 100);
+    cycle.display();
+
+    let mut input = vec![3, 2, 6, 5, 1, 9, 4, 7, 8];
+    for x in 10..1_000_000 + 1 {
+        input.push(x);
     }
-
-    // println!("Done shuffle!");
-    //
-    print_cups(&input, 1);
-
-   // // print_cups(&input, current_cup_idx);
-
-    // for i in 0..10_000_000 {
-    //     if (i + 1) % 10_000 == 0 {
-    //         println!("\nRound: {}", i + 1);
-    //     }
-    // //    print_cups(&input, current_cup_idx);
-    //     current_cup_idx = do_step(&mut input, current_cup_idx);
-    //  //   print_cups(&input, current_cup_idx);
-    // }
-
-    // // println!("Done shuffle!");
-
-    zt.find(1);
-    println!("{:?}", zt);
-    // let one_idx = find(&input, 1).unwrap();
-    // println!("{} * {}", input[(one_idx + 1) % input.len()], input[(one_idx + 2) % input.len()]);
-    // // for i in one_idx + 1..input.len() {
-    // //     print!("{}", input[i])
-    // // }
-    // // for i in 0..one_idx {
-    // //     print!("{}", input[i])
-    // // }
-    // // println!("");
+    let cycle = run_game(input, 10_000_000);
+    let a = cycle.next(1);
+    let b = cycle.next(a);
+    println!("{} * {} = {}", a, b, a * b);
 }
