@@ -1,5 +1,7 @@
 use derive_more::{Add, Mul};
 use lazy_static::lazy_static;
+use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
 
 pub trait FromPair {
     fn from_pair(x: i64, y: i64) -> Self;
@@ -141,4 +143,42 @@ where
 
 pub fn read_numbers(filename: &str) -> anyhow::Result<Vec<i64>> {
     read_parsed_lines(filename, |x| Ok(x.parse().unwrap()))
+}
+
+pub fn run_life<T, F, G>(input: HashSet<T>, neighbours: F, alive: G, steps: usize) -> HashSet<T>
+where
+    F: Fn(T) -> Vec<T>,
+    T: Hash + PartialEq + Eq + Copy,
+    G: Fn(usize, bool) -> bool,
+{
+    (0..steps).fold(input, |a, _i| life_step(&a, &neighbours, &alive))
+}
+
+pub fn life_step<T, F, G>(input: &HashSet<T>, neighbours: F, alive: G) -> HashSet<T>
+where
+    F: Fn(T) -> Vec<T>,
+    T: Hash + PartialEq + Eq + Copy,
+    G: Fn(usize, bool) -> bool,
+{
+    let mut heat = HashMap::new();
+
+    for x in input {
+        for v in neighbours(*x) {
+            let new_x = match heat.get(&v) {
+                None => 1,
+                Some(x) => x + 1,
+            };
+            heat.insert(v, new_x);
+        }
+    }
+
+    heat.into_iter()
+        .filter_map(|(v, count)| {
+            if alive(count, input.contains(&v)) {
+                Some(v)
+            } else {
+                None
+            }
+        })
+        .collect()
 }
