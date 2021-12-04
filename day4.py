@@ -1,3 +1,4 @@
+from pansi import ansi
 import aoc
 
 def is_winner(board, calls):
@@ -19,18 +20,16 @@ def parse_board(board):
     return [[int(x) for x in line.split()] for line in board.split('\n') if line]
 
 def print_board(board, calls):
-    green = '\033[92m'
-    red = '\033[91m'
     for line in board:
         formatted = []
         for x in line:
             if x == calls[-1]:
-                color = red
+                color = ansi.red
             elif x in calls:
-                color = green
+                color = ansi.green
             else:
                 color = ''
-            formatted.append(f"{color}{x:2}\033[0m")
+            formatted.append(f"{color}{x:2}{ansi._}")
         print(' '.join(formatted))
 
 def simulate_game(board, calls):
