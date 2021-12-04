@@ -1,3 +1,6 @@
+def input_file(day, example=False):
+    return f"input/day{day}{'-example' if example else ''}"
+
 def words(day):
     return [line.split() for line in lines(day)]
 
@@ -6,3 +9,6 @@ def ints(day):
 
 def lines(day):
     return open(f"input/day{day}").readlines()
+
+def blocks(day, example=False):
+    return open(input_file(day, example)).read().split("\n\n")
