@@ -5,13 +5,23 @@ timers = [int(x) for x in aoc.lines(6)[0].split(',')]
 counts = Counter(timers)
 counts = [counts[x] for x in range(9)]
 
-def step(counts):
-    return counts[1:7] + [counts[7] + counts[0], counts[8], counts[0]]
+def memoize(f):
+    cache = {}
+    def wraps(n):
+        try:
+            return cache[n]
+        except KeyError:
+            r = cache[n] = f(n)
+            return r
+    return wraps
 
-def simulate(counts, steps):
-    for steps in range(steps):
-        counts = step(counts)
-    return counts
+first_values = [sum(counts) + sum(counts[:i]) for i in range(9)]
 
-print("Part 1: ", sum(simulate(counts, 80)))
-print("Part 2: ", sum(simulate(counts, 256)))
+@memoize
+def fish(n):
+    if n < 9:
+        return first_values[n]
+    return fish(n - 7) + fish(n - 9)
+
+print("Part 1: ", fish(80))
+print("Part 2: ", fish(256))
