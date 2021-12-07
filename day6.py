@@ -1,8 +1,7 @@
 import aoc
 from collections import Counter
 
-timers = [int(x) for x in aoc.lines(6)[0].split(',')]
-counts = Counter(timers)
+counts = Counter(aoc.comma_ints(6))
 counts = [counts[x] for x in range(9)]
 
 def memoize(f):

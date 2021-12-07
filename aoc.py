@@ -7,6 +7,9 @@ def words(day):
 def ints(day):
     return [int(line) for line in lines(day)]
 
+def comma_ints(day):
+    return [int(x) for x in lines(day)[0].split(',')]
+
 def lines(day):
     return open(f"input/day{day}").readlines()
 
