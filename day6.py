@@ -1,7 +1,8 @@
 import aoc
 from collections import Counter
 
-counts = Counter(aoc.comma_ints(6))
+timers = [int(x) for x in aoc.lines(6)[0].split(',')]
+counts = Counter(timers)
 counts = [counts[x] for x in range(9)]
 
 def memoize(f):
@@ -15,6 +16,8 @@ def memoize(f):
     return wraps
 
 first_values = [sum(counts) + sum(counts[:i]) for i in range(9)]
+
+print(first_values)
 
 @memoize
 def fish(n):
