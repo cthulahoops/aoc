@@ -2,7 +2,7 @@ from collections import defaultdict
 import aoc
 
 
-digits = [
+DIGITS = [
     "abcefg",
     "cf",
     "acdeg",
@@ -15,20 +15,24 @@ digits = [
     "abcdfg"
 ]
 
-digit_map = {k: str(v) for (v, k) in enumerate(digits)}
+digit_map = {k: str(v) for (v, k) in enumerate(DIGITS)}
+
+def digits_to_int(digits):
+    return int(''.join(digits))
+
 
 def compute_signatures(digits):
     signatures = {}
     for wire in "abcdefg":
         signature = [0] * 8
-        for i in range(10):
-            if wire in digits[i]:
-                signature[len(digits[i])] += 1
+        for digit in digits:
+            if wire in digit:
+                signature[len(digit)] += 1
         signatures[wire] = ''.join(str(s) for s in signature)
     return signatures
 
 def main():
-    signatures = {v: k for k, v in compute_signatures(digits).items()}
+    signatures = {v: k for k, v in compute_signatures(DIGITS).items()}
 
     print(signatures)
 
@@ -41,14 +45,13 @@ def main():
         code = code.split()
 
         for x in code:
-            if len(x) in [len(digits[1]), len(digits[4]), len(digits[7]), len(digits[8])]:
+            if len(x) in [len(DIGITS[1]), len(DIGITS[4]), len(DIGITS[7]), len(DIGITS[8])]:
                 day1 += 1
 
         mapping = {ord(k): signatures[s] for (k, s) in compute_signatures(examples).items()}
         decoded = [''.join(sorted(x.translate(mapping))) for x in code]
-        result = int(''.join(digit_map[x] for x in decoded))
+        result = digits_to_int(digit_map[x] for x in decoded)
         day2 += result
-
 
     print("Day 1: ", day1)
     print("Day 2: ", day2)
