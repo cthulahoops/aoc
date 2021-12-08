@@ -20,10 +20,10 @@ digit_map = {k: str(v) for (v, k) in enumerate(digits)}
 def compute_signatures(digits):
     signatures = {}
     for wire in "abcdefg":
-        signature = [0] * 5
+        signature = [0] * 6
         for i in range(10):
             if wire in digits[i]:
-                signature[len(digits[i]) - 3] += 1
+                signature[len(digits[i]) - 2] += 1
         signatures[wire] = ''.join(str(s) for s in signature)
     return signatures
 
