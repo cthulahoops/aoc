@@ -28,8 +28,8 @@ def display_grid(grid, lows, basins):
 def find_lows(grid):
     return {
         point
-        for (point, value) in grid.items()
-        if all(value < grid[neighbour] for neighbour in neighbours(point) if neighbour in grid)
+        for (point, height) in grid.items()
+        if all(height < grid[neighbour] for neighbour in neighbours(point) if neighbour in grid)
     }
 
 def flood_fill(grid, low):
