@@ -47,7 +47,7 @@ def main():
     grid = {
         (x, y): int(height)
         for (y, line) in enumerate(aoc.lines(9))
-        for (x, height) in enumerate(line[:-1])
+        for (x, height) in enumerate(line)
     }
 
     lows = find_lows(grid)

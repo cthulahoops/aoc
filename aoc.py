@@ -10,8 +10,8 @@ def ints(day):
 def comma_ints(day):
     return [int(x) for x in lines(day)[0].split(',')]
 
-def lines(day):
-    return open(f"input/day{day}").readlines()
+def lines(day, example=False):
+    return open(input_file(day, example)).read().splitlines()
 
 def blocks(day, example=False):
     return open(input_file(day, example)).read().split("\n\n")
