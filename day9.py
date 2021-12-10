@@ -10,18 +10,17 @@ def display_grid(grid, lows, basins):
     for y in range(max(y for (_, y) in grid)):
         for x in range(max(x for (x, _) in grid)):
             height = grid[(x, y)]
+            r = g = b = height + 6
             if (x, y) in lows:
                 color = ansi.green
             elif (x, y) in basins[-1]:
-                color = ansi.yellow
+                color = ansi.rgb[f'#0{g:x}{b:x}']
             elif (x, y) in basins[-2]:
-                color = ansi.rgb['#aaa']
+                color = ansi.rgb[f'#{r:x}{g:x}0']
             elif (x, y) in basins[-3]:
-                color = ansi.rgb['#9B4804']
-            elif height == 9:
-                color = ansi.red
+                color = ansi.rgb[f'#{r:x}0{b:x}']
             else:
-                color = ''
+                color = ansi.rgb[f'#{r:x}{g:x}{b:x}']
             print(f"{color}{height}{ansi._}", end="")
         print()
 
