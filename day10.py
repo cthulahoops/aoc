@@ -17,11 +17,7 @@ def line_completion(line):
     return stack
 
 def completion_score(remainder):
-    score = 0
-    for item in remainder:
-        score *= 5
-        score += INCOMPLETE_SCORES[item]
-    return score
+    return int(''.join(str(INCOMPLETE_SCORES[x]) for x in remainder), 5)
 
 def main():
     part1 = 0
