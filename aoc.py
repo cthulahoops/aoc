@@ -15,3 +15,10 @@ def lines(day, example=False):
 
 def blocks(day, example=False):
     return open(input_file(day, example)).read().split("\n\n")
+
+def int_grid(day, example=False):
+    return {
+        (x, y): int(value)
+        for (y, line) in enumerate(lines(day, example))
+        for (x, value) in enumerate(line)
+    }

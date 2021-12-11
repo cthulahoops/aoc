@@ -7,8 +7,8 @@ def neighbours(point):
     return [((i - 1), j), ((i + 1), j), (i, (j - 1)), (i, (j + 1))]
 
 def display_grid(grid, lows, basins):
-    for y in range(max(y for (_, y) in grid)):
-        for x in range(max(x for (x, _) in grid)):
+    for y in range(max(y for (_, y) in grid) + 1):
+        for x in range(max(x for (x, _) in grid) + 1):
             height = grid[(x, y)]
             r = g = b = height + 6
             if (x, y) in lows:
@@ -43,11 +43,7 @@ def flood_fill(grid, low):
     return members
 
 def main():
-    grid = {
-        (x, y): int(height)
-        for (y, line) in enumerate(aoc.lines(9))
-        for (x, height) in enumerate(line)
-    }
+    grid = aoc.int_grid(9)
 
     lows = find_lows(grid)
 
