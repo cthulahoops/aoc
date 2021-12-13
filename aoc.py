@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 def input_file(day, example=False):
     return f"input/day{day}{'-example' if example else ''}"
 
@@ -22,3 +24,13 @@ def int_grid(day, example=False):
         for (y, line) in enumerate(lines(day, example))
         for (x, value) in enumerate(line)
     }
+
+@dataclass(frozen=True)
+class Point:
+    x: int
+    y: int
+
+    @classmethod
+    def from_string(cls, string):
+        x, y = string.split(',')
+        return cls(int(x), int(y))
