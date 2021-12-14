@@ -1,3 +1,4 @@
+import graphviz
 from collections import defaultdict
 import aoc
 
@@ -15,7 +16,7 @@ def is_small(cave):
 
 def paths(caves, current, visited, spare_time=0):
     if current == 'end':
-        yield ()
+        yield ('end',)
         return
 
     new_visited = visited | {current}
@@ -30,15 +31,31 @@ def paths(caves, current, visited, spare_time=0):
         for tail in paths(caves, option, new_visited, spare_time - time_spent):
             yield (current,) + tail
 
+def render(connections, longest):
+    graph = graphviz.Digraph()
+    for k, v in connections:
+        graph.edge(k, v, dir='none', color="gray")
+
+    for i, (a, b) in enumerate(zip(longest, longest[1:])):
+        graph.edge(a, b, label=str(i + 1), color="blue")
+
+    print(graph.source)
+
 def main():
     connections = [path.split('-') for path in aoc.lines(12)]
+
     caves = build_graph(connections)
 
     part1_paths = list(paths(caves, 'start', set()))
-    print("Part 1: ", len(part1_paths))
+#    print("Part 1: ", len(part1_paths))
 
     part2_paths = list(paths(caves, 'start', set(), 1))
-    print("Part 2: ", len(part2_paths))
+
+#    print("Part 2: ", len(part2_paths))
+
+    longest = max(part2_paths, key=len)
+    render(connections, longest)
+
 
 if __name__ == '__main__':
     main()
