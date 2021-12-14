@@ -43,10 +43,14 @@ def step(grid):
     return set(flashes)
 
 def main():
+    previous = set()
+
     grid = aoc.int_grid(11)
 
     n = 0
     part1 = 0
+
+    previous.add(tuple(e for (_, e) in sorted(grid.items())))
 
     display_grid(grid, set())
     while True:
@@ -61,7 +65,13 @@ def main():
         if len(flashes) == 100:
             break
 
-        time.sleep(0.05)
+        sig = tuple(e for (_, e) in sorted(grid.items()))
+        if sig in previous and n >= 100:
+            print("Looped")
+            break
+        previous.add(sig)
+
+        time.sleep(0.2)
 
     print("Part 1: ", part1)
     print("Part 2: ", n)
