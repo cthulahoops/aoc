@@ -1,16 +1,8 @@
 from dataclasses import dataclass
 from collections import Counter
 import aoc
+from aoc import Point
 
-@dataclass(frozen=True)
-class Point:
-    x: int
-    y: int
-
-    @classmethod
-    def from_string(cls, string):
-        x, y = string.split(',')
-        return cls(int(x), int(y))
 
 @dataclass(frozen=True)
 class LineSegment:
