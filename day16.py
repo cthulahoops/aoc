@@ -90,9 +90,9 @@ def eval(packet):
 
 
 def main():
-    assert parse_hex('D2FE28') == (6, 4, 2021)
-    # assert parse_hex('38006F45291200') == (1, [(6, 10), (2, 20)])
-    # assert parse_hex('EE00D40C823060') == (7, [(2, 1), (4, 2), (1, 3)])
+    assert parse_hex('D2FE28') == Packet(6, 4, 2021)
+    assert parse_hex('38006F45291200') == Packet(1, 6, [Packet(6, 4, 10), Packet(2, 4, 20)])
+    assert parse_hex('EE00D40C823060') == Packet(7, 3, [Packet(2, 4, 1), Packet(4, 4, 2), Packet(1, 4, 3)])
     assert total_version(parse_hex('8A004A801A8002F478')) == 16
     assert total_version(parse_hex('620080001611562C8802118E34')) == 12
     assert total_version(parse_hex('C0015000016115A2E0802F182340')) == 23
