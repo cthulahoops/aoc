@@ -1,13 +1,52 @@
-from collections import defaultdict
 import pytest
 import aoc
 
-def display_image(image):
-    for y in range(min(y for (_, y) in image), max(y for (_, y) in image) + 1):
-        for x in range(min(x for (x, _) in image), max(x for (x, _) in image) + 1):
-            value = '#' if (x, y) in image else '.'
-            print(f"{value}", end="")
-        print()
+class Image:
+    def __init__(self, image, background, min_y, max_y, min_x, max_x):
+        self.image = image
+        self.background = background
+        self.min_y = min_y
+        self.max_y = max_y
+        self.min_x = min_x
+        self.max_x = max_x
+
+    @classmethod
+    def from_string(cls, image_data):
+        lines = image_data.splitlines()
+        image = {}
+        for (y, line) in enumerate(lines):
+            for (x, char) in enumerate(line):
+                image[x, y] = char
+        return cls(image, '.', 0, len(lines), 0, len(lines[0]))
+
+    def enhance(self, algorithm):
+        new_image = {}
+        for y in range(self.min_y - 1, self.max_y + 1):
+            for x in range(self.min_x - 1, self.max_x + 1):
+                offset = 0
+                for (i, neighbour) in enumerate(get_neighbours((x, y))):
+                    if self.image.get(neighbour, self.background) == '#':
+                        offset += 256 >> i
+                new_image[(x, y)] = algorithm[offset]
+
+        if self.background == '.':
+            new_background = algorithm[0]
+        else:
+            new_background = algorithm[511]
+
+        return Image(new_image, new_background, self.min_y - 1, self.max_y + 1, self.min_x - 1, self.max_y + 1)
+
+    def display(self):
+        for y in range(self.min_y - 2, self.max_y + 2):
+            for x in range(self.min_x - 2, self.max_x + 2):
+                print(self.image.get((x, y), self.background), end='')
+            print()
+
+    def lit_pixels(self):
+        if self.background == '#':
+            raise ValueError("Infinite!")
+
+        return sum(1 for v in self.image.values() if v == '#')
 
 def parse_image(image):
     return {
@@ -23,55 +62,24 @@ def get_neighbours(pixel):
         for dx in [-1, 0, 1]:
             yield (x + dx, y + dy)
 
-def compute_offsets(image):
-    offsets = defaultdict(int)
-    for pixel in image:
-        for (i, neighbour) in enumerate(get_neighbours(pixel)):
-            offsets[neighbour] += 1 << i
-    return offsets
-
-def apply_algorithm(image, algorithm):
-    offsets = defaultdict(int)
-    for pixel in image:
-        for (i, neighbour) in enumerate(get_neighbours(pixel)):
-            offsets[neighbour] += 1 << i
-
-    new_image = set()
-    for (k, v) in offsets.items():
-        if algorithm[v] == '#':
-            new_image.add(k)
-    return new_image
-
-
 def main():
     (algorithm, image) = aoc.blocks(20)
     assert len(algorithm) == 512
-    image = parse_image(image)
+    image = Image.from_string(image)
 
-    display_image(image)
-    print(len(image))
+    image.display()
 
     for _ in range(2):
-        image = apply_algorithm(image, algorithm)
-        display_image(image)
-        print(len(image))
+        image = image.enhance(algorithm)
+        image.display()
+
+    print("Part 1: ", image.lit_pixels())
+
+    for _ in range(48):
+        image = image.enhance(algorithm)
+
+    print("Part 2: ", image.lit_pixels())
+
 
 if __name__ == '__main__':
     main()
-
-
-example_image = """#..#.
-#....
-##..#
-..#..
-..###
-"""
-def test_grid_offset():
-    image = parse_image(example_image)
-    offsets = compute_offsets(image)
-    assert offsets[(2,2)] == 34
-
-dark_algorithm = "#.#..#.#...##.###.##.#.###....#..##..#.#####.#.##.#.##..##..#.#.######..##..####.#....#.#....##....#####..#######..###..#.##..#....#....#....#..#..#..##...####..###.##..##..#.#.#.#.#.#.#..##.###.##.#.##.#.##.#####..###.#.#...##..##...###...###..##...##.######....####.###...####.##.....###.##.#.##.#.....##.##..###.....#..##....#.##.#...##.###.###.#..####....#.###...#....#..###...##..#####..#.######..#.#....####.####.#.#....#.###..##...#.###.####....#.##.#....##...##.#..#....#.##...#....#.####..#.#..####.#..."
-dark_example = "#"
-def test_dark_example():
-    image =

@@ -1,6 +1,9 @@
+import sys
 from dataclasses import dataclass
 
 def input_file(day, example=False):
+    if '--example' in sys.argv:
+        example=True
     return f"input/day{day}{'-example' if example else ''}"
 
 def words(day):
@@ -34,3 +37,6 @@ class Point:
     def from_string(cls, string):
         x, y = string.split(',')
         return cls(int(x), int(y))
+
+    def __add__(self, other):
+        return Point(self.x + other.x, self.y + other.y)
