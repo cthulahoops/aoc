@@ -16,16 +16,10 @@ def rotate_z(theta):
     return numpy.array([[cos(theta),-sin(theta),0],[sin(theta),cos(theta),0],[0,0,1]], dtype=int)
 
 def generate_rotations():
-    seen = set()
     rotations = []
-    for x in [0, pi/2, pi, 3*pi/2]:
-        for y in [0, pi/2, pi, 3*pi/2]:
-            for z in [0, pi/2, pi, 3*pi/2]:
-                rot = rotate_x(x) @ rotate_y(y) @ rotate_z(z)
-                trot = tuple((tuple(x) for x in rot))
-                if trot not in seen:
-                    rotations.append(rot)
-                    seen.add(trot)
+    for facing in [rotate_x(0), rotate_x(pi/2), rotate_x(pi), rotate_x(3*pi/2), rotate_y(-pi/2), rotate_y(pi/2)]:
+        for z in [0, pi/2, pi, 3*pi/2]:
+            rotations.append(facing @ rotate_z(z))
     return rotations
 
 ROTATIONS = generate_rotations()
