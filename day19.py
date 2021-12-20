@@ -95,12 +95,14 @@ def main():
 
     for (i, scanner_i) in enumerate(scanner_reports):
         for (j, scanner_j) in enumerate(scanner_reports):
-            if j == i:
+            if j <= i:
                 continue
             trans = find_rotated_match(scanner_i, scanner_j)
             if trans:
                 graph[j].append(i)
                 transforms[(j, i)] = trans
+                graph[i].append(j)
+                transforms[(i, j)] = find_rotated_match(scanner_j, scanner_i)
                 print(i, j, trans)
 
     paths = find_paths(graph, 0)
