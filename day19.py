@@ -129,7 +129,7 @@ def main():
 
         scanners.add(scanner)
 
-        for beacon in scanner:
+        for beacon in scanner_report:
             beacons.add(beacon)
 
     print("Part 1: ", len(beacons))
