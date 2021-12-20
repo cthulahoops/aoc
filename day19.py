@@ -1,5 +1,5 @@
 from math import cos, sin, pi
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, Counter
 import pytest
 import numpy
 import aoc
@@ -52,13 +52,15 @@ def parse_scanners(text):
 
 
 def find_matching(scanner_a, scanner_b, required_overlap=12):
-    scanner_a_set = set(scanner_a)
-    for b in scanner_b:
-        for a in scanner_a:
-            offset = a - b
-            matches = len([x + offset for x in scanner_b if x + offset in scanner_a_set])
-            if matches == required_overlap:
-                return offset
+    offsets = Counter(
+        a - b
+            for a in scanner_a
+            for b in scanner_b
+    )
+
+    for offset in offsets:
+        if offsets[offset] == required_overlap:
+            return offset
     return None
 
 def find_rotated_match(scanner_a, scanner_b, required_overlap=12):
@@ -90,7 +92,7 @@ def test_manhatten_distance():
     assert manhatten_distance(Point((1, 7, 3)), Point((10, 1, 8))) == 9 + 6 + 5
 
 def main():
-    blocks = aoc.blocks(19, example=True)
+    blocks = aoc.blocks(19)
 
     scanner_reports = [[Point.from_string(point) for point in block.splitlines()[1:]] for block in blocks]
 
