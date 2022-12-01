@@ -58,7 +58,6 @@ impl Game {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 struct RecursiveGame {
     player1: Deck,
     player2: Deck,
@@ -93,18 +92,18 @@ impl RecursiveGame {
     }
 
     fn run(&mut self) -> Player {
-        let mut seen: HashSet<RecursiveGame> = HashSet::new();
+        let mut seen = HashSet::new();
 
         let mut turn = 1;
         while !self.game_over() {
             println!("=== Round {} ===", turn);
             turn += 1;
 
-            if seen.contains(&self) {
+            if seen.contains(&self.player1) {
                 return Player::One;
             }
 
-            seen.insert(self.clone());
+            seen.insert(self.player1.clone());
 
             self.step();
 
