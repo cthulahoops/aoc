@@ -1,1 +1,0 @@
-curl "https://adventofcode.com/2021/day/$1/input" -H 'Cookie: session=53616c7465645f5f78858ff4369e36b66bc4bd3ddfee07768d1253d9cfc2ce3d7da5321acc192b660d32c0876a0c0923' > "input/day$1"

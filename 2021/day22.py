@@ -2,7 +2,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 import aoc
 
-@dataclass
+@dataclass(frozen=True)
 class Range:
     low: int
     high: int
@@ -16,7 +16,7 @@ class Range:
     def __and__(self, other):
         return Range(max(self.low, other.low), min(self.high, other.high))
 
-@dataclass
+@dataclass(frozen=True)
 class Cuboid:
     x_range: Range
     y_range: Range
@@ -29,9 +29,40 @@ class Cuboid:
     def __and__(self, other):
         return len(self.x_range & other.x_range) > 0 and len(self.y_range & other.y_range) > 0 and len(self.z_range & other.z_range) > 0
 
+    def __or__(self, other):
+        return CuboidSet(split_cuboid_cuboid(self, other) | split_cuboid_cuboid(other, self))
+
+    def __sub__(self, other):
+        return CuboidSet(split_cuboid_cuboid(self, other) - split_cuboid_cuboid(other, self))
+
     def volume(self):
         return len(self.x_range) * len(self.y_range) * len(self.z_range)
 
+
+class CuboidSet:
+    def __init__(self, cuboids={}):
+        self.cuboids = set(cuboids)
+
+    def volume(self):
+        return sum(cuboid.volume() for cuboid in self.cuboids)
+
+    def __or__(self, other):
+        split_other = {other}
+        cuboids = {}
+        for cuboid in self.cuboids:
+            cuboids |= split_cuboid_cuboid(cuboid, other)
+        raise ValueError("What about split other!")
+        return CuboidSet(cuboids)
+
+    def __sub__(self, other):
+        cuboids = {}
+        for cuboid in self.cuboids:
+            cuboids |= split_cuboid_cuboid(cuboid, other) - split_cuboid_cuboid(other, cuboid)
+        return CuboidSet(cuboids)
+
+
+def cuboid_union(a, b):
+    return
 
 def parse_state(string):
     match string:
@@ -97,6 +128,24 @@ def split_cuboid(cuboid, point):
     ]
     return [c for c in cubes if c.volume() > 0]
 
+def low_range(range, split_range):
+    return Range(range.low, min(split_range.low - 1, range.high))
+
+def mid_range(range, split_range):
+    return Range(max(split_range.low, range.low), min(split_range.high, range.high))
+
+def high_range(range, split_range):
+    return Range(max(split_range.high + 1, range.low), range.high)
+
+def split_cuboid_cuboid(cuboid, other):
+    cubes = [
+        Cuboid(x_range=xs(cuboid.x_range, other.x_range), y_range=ys(cuboid.y_range, other.y_range), z_range=zs(cuboid.z_range, other.z_range))
+        for xs in [low_range, mid_range, high_range]
+        for ys in [low_range, mid_range, high_range]
+        for zs in [low_range, mid_range, high_range]
+    ]
+    return {c for c in cubes if c.volume() > 0}
+
 def split_step(step):
     cuboids = split_cuboid(step.cuboid, (1000, 1000, 1000))
     return [Step(index=step.index, state=step.state, cuboid=c) for c in cuboids]
@@ -120,6 +169,18 @@ Step = namedtuple('Step', ('index', 'state', 'cuboid'))
 
 def main():
     steps = [parse_step(x) for x in aoc.lines(22)]
+
+    cuboid_set = CuboidSet()
+    for (state, cuboid) in steps:
+        print(state, cuboid)
+        if state:
+            cuboid_set = cuboid_set | cuboid
+        else:
+            cuboid_set = cuboid_set - cuboid
+        print(cuboid_set.volume())
+
+    print("Part 2: ", cuboid_set.volume())
+    return
     steps = [Step(index=i, state=state, cuboid=cuboid) for (i, (state, cuboid)) in enumerate(steps)]
 
     print("Step count: ", len(steps))
@@ -187,3 +248,22 @@ def test_split():
     sp = split_cuboid(cuboid, (5, 0, 0))
     assert len(sp) == 2
     assert sp[0].volume() + sp[1].volume() == cuboid.volume()
+
+def test_cuboid_set_ops():
+    a = Cuboid(Range(0, 5), Range(0, 5), Range(0, 5))
+    b = Cuboid(Range(2, 4), Range(0, 5), Range(0, 5))
+    c = Cuboid(Range(10, 10), Range(10, 10), Range(10, 10))
+
+    assert a.volume() == 6 * 6 * 6
+    assert b.volume() == 3 * 6 * 6
+
+    assert (a | b).volume() == a.volume()
+    assert (a - b).volume() == a.volume() - b.volume()
+    assert (a | c).volume() == a.volume() + c.volume()
+    assert (a - c).volume() == a.volume()
+
+def test_cuboid_set():
+    s = CuboidSet()
+    a = Cuboid(Range(0, 5), Range(0, 5), Range(0, 5))
+
+    assert (s | a).volume() == 6 * 6 * 6
