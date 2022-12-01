@@ -1,6 +1,5 @@
 (use-modules (ice-9 textual-ports))
 (use-modules (ice-9 rdelim))
-(use-modules (ice-9 regex))
 (use-modules (srfi srfi-1))
 
 (define (read-blocks) (gather-list read-block null?))
