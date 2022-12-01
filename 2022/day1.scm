@@ -1,5 +1,6 @@
 (use-modules (ice-9 textual-ports))
 (use-modules (ice-9 rdelim))
+(use-modules (ice-9 format))
 (use-modules (srfi srfi-1))
 
 (define (read-blocks) (gather-list read-block null?))
@@ -10,8 +11,7 @@
   (let loop ((item (get-next)) (items (list)))
     (if (end? item)
         (reverse items)
-        (loop (get-next) (cons item items))
-        )))
+        (loop (get-next) (cons item items)))))
 
 (define (sum items) (fold + 0 items))
 (define (maximum items) (fold max 0 items))
@@ -20,9 +20,5 @@
 
 (define sorted-totals (sort (map sum blocks) >))
 
-(display "Part 1: ")
-(display (car sorted-totals))
-(newline)
-(display "Part 2: ")
-(display (sum (take sorted-totals 3)))
-(newline)
+(format #t "Part 1: ~d\n" (car sorted-totals))
+(format #t "Part 2: ~d\n" (sum (take sorted-totals 3)))
