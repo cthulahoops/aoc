@@ -13,18 +13,16 @@
   (let ((mid (/ (string-length str) 2)))
     (list (substring str 0 mid) (substring str mid))))
 
-(define (common-element-in-rucksack rucksack)
-    (common-element (split-compartments rucksack)))
-
 (define (common-element x) (car (char-set->list (apply char-set-intersection (map string->char-set x)))))
+(define common-element-in-rucksack (compose common-element split-compartments))
 
 (define (read-group) (list (read-line) (read-line) (read-line)))
-(define (read-groups) (gather-list read-group (lambda (x) (eof-object? (car x)))))
+(define (read-groups) (gather-list read-group (compose eof-object? car)))
 
 (define input-lines (with-input-from-file "input/3" read-lines))
-(define part1 (sum (map (lambda (x) (priority (common-element-in-rucksack x))) input-lines)))
+(define part1 (sum (map (compose priority common-element-in-rucksack) input-lines)))
 (format #t "Part 1: ~d\n" part1)
 
 (define input-lines-2 (with-input-from-file "input/3" read-groups))
-(define part2 (sum (map (lambda (x) (priority (common-element x))) input-lines-2)))
-(format #t "Part 1: ~d\n" part2)
+(define part2 (sum (map (compose priority common-element) input-lines-2)))
+(format #t "Part 2: ~d\n" part2)
