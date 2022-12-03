@@ -19,10 +19,13 @@
 (define (read-group) (list (read-line) (read-line) (read-line)))
 (define (read-groups) (gather-list read-group (compose eof-object? car)))
 
-(define input-lines (with-input-from-file "input/3" read-lines))
-(define part1 (sum (map (compose priority common-element-in-rucksack) input-lines)))
-(format #t "Part 1: ~d\n" part1)
+(define (part1)
+  (let ((input-lines (with-input-from-file "input/3" read-lines)))
+    (sum (map (compose priority common-element-in-rucksack) input-lines))))
 
-(define input-lines-2 (with-input-from-file "input/3" read-groups))
-(define part2 (sum (map (compose priority common-element) input-lines-2)))
-(format #t "Part 2: ~d\n" part2)
+(define (part2)
+  (let ((input-lines (with-input-from-file "input/3" read-groups)))
+    (sum (map (compose priority common-element) input-lines))))
+
+(format #t "Part 1: ~d\n" (part1))
+(format #t "Part 2: ~d\n" (part2))
