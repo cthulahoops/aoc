@@ -1,5 +1,5 @@
 (define-module (aoc)
-  #:export (gather-list read-lines sum))
+  #:export (gather-list read-lines sum pipe>))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -13,3 +13,15 @@
 (define (read-lines) (gather-list read-line eof-object?))
 
 (define (sum items) (fold + 0 items))
+
+(define (append-item final-element items) (reverse (cons final-element (reverse items))))
+
+(define-macro (pipe> value . pipeline)
+  (if
+    (null? pipeline)
+    value
+    (let*
+      ((next-item (car pipeline))
+       (rest-of-pipeline (cdr pipeline)))
+      `(pipe> ,(append-item value next-item) . ,rest-of-pipeline)))
+      )
