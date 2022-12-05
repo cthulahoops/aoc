@@ -15,15 +15,6 @@
   (origin instruction-origin)
   (destination instruction-destination))
 
-(define (with-stack-n f n stacks)
-  (let* (
-      (stack (cdr (vhash-assoc n stacks)))
-      (result (f stack))
-      (value (car result))
-      (rest (cdr result))
-      (new-stacks (vhash-cons n rest (vhash-delete n stacks))))
-    (cons value new-stacks)))
-
 ; Part one (crane 9000)
 (define (move-items count origin destination stacks)
   (let* (
