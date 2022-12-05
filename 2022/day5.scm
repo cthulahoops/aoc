@@ -16,13 +16,12 @@
   (destination instruction-destination))
 
 ; Part one (crane 9000)
-(define (apply-instructions instructions stacks) (fold apply-instruction stacks instructions))
-(define (apply-instruction instruction stacks)
+(define (apply-instructions-9000 instructions stacks) (fold apply-instruction-9000 stacks instructions))
+(define (apply-instruction-9000 instruction stacks)
   (let loop ((count (instruction-count instruction)) (stacks stacks))
     (if (= 0 count)
         stacks
         (loop (- count 1) (move-items 1 (instruction-origin instruction) (instruction-destination instruction) stacks)))))
-
 
 ; Part two (crane 9001)
 (define (apply-instructions-9001 instructions stacks) (fold apply-instruction-9001 stacks instructions))
@@ -81,20 +80,15 @@
 (define (stack-heads stacks)
     (list->string (map cadr (sort (vlist->list stacks) (lambda (x y) (< (car x) (car y)))))))
 
-(define (part1)
-  (let* (
-        (input (with-input-from-file "input/5" read-loading-instructions))
-        (stacks (car input))
-        (instructions (cadr input))
-        (final-stacks (apply-instructions instructions stacks)))
-    (stack-heads final-stacks)))
+(define (part1) (part apply-instructions-9000))
+(define (part2) (part apply-instructions-9001))
 
-(define (part2)
+(define (part crane-function)
   (let* (
         (input (with-input-from-file "input/5" read-loading-instructions))
         (stacks (car input))
         (instructions (cadr input))
-        (final-stacks (apply-instructions-9001 instructions stacks)))
+        (final-stacks (crane-function instructions stacks)))
     (stack-heads final-stacks)))
 
 (format #t "Part 1: ~s\n" (part1))
