@@ -15,65 +15,48 @@
   (origin instruction-origin)
   (destination instruction-destination))
 
+(define (with-stack-n f n stacks)
+  (let* (
+      (stack (cdr (vhash-assoc n stacks)))
+      (result (f stack))
+      (value (car result))
+      (rest (cdr result))
+      (new-stacks (vhash-cons n rest (vhash-delete n stacks))))
+    (cons value new-stacks)))
+
 ; Part one (crane 9000)
-(define (pop-from-stack n stacks)
+(define (move-items count origin destination stacks)
   (let* (
-      (stack (cdr (vhash-assoc n stacks)))
-      (value (car stack))
-      (rest (cdr stack))
-      (new-stacks (vhash-cons n rest (vhash-delete n stacks))))
-    (cons value new-stacks)))
-
-(define (pop-from-stack n stacks)
-  (let* (
-      (stack (cdr (vhash-assoc n stacks)))
-      (value (car stack))
-      (rest (cdr stack))
-      (new-stacks (vhash-cons n rest (vhash-delete n stacks))))
-    (cons value new-stacks)))
-
-(define (push-to-stack n value stacks)
-  (let* (
-      (stack (cdr (vhash-assoc n stacks)))
-      (updated-stack (cons value stack)))
-    (vhash-cons n updated-stack (vhash-delete n stacks))))
-
-(define (move-item origin destination stacks)
-  (let* (
-        (pop-result (pop-from-stack origin stacks))
+        (pop-result (pop-n-from-stack count origin stacks))
         (value (car pop-result))
         (popped-stacks (cdr pop-result)))
-    (push-to-stack destination value popped-stacks)))
+    (push-n-to-stack destination value popped-stacks)))
 
 (define (apply-instruction instruction stacks)
   (let loop ((count (instruction-count instruction)) (stacks stacks))
     (if (= 0 count)
         stacks
-        (loop (- count 1) (move-item (instruction-origin instruction) (instruction-destination instruction) stacks)))))
+        (loop (- count 1) (move-items 1 (instruction-origin instruction) (instruction-destination instruction) stacks)))))
 
 (define (apply-instructions instructions stacks) (fold apply-instruction stacks instructions))
 
 ; Part two (crane 9001)
-(define (pop-n-from-stack count n stacks)
+(define (pop-n-from-stack count stack-number stacks)
   (let* (
-      (stack (cdr (vhash-assoc n stacks)))
+      (stack (cdr (vhash-assoc stack-number stacks)))
       (value (list-head stack count))
       (rest (drop stack count))
-      (new-stacks (vhash-cons n rest (vhash-delete n stacks))))
+      (new-stacks (vhash-cons stack-number rest (vhash-delete stack-number stacks))))
     (cons value new-stacks)))
 
-(define (push-n-to-stack n items stacks)
+(define (push-n-to-stack stack-number items stacks)
   (let* (
-      (stack (cdr (vhash-assoc n stacks)))
+      (stack (cdr (vhash-assoc stack-number stacks)))
       (updated-stack (append items stack)))
-    (vhash-cons n updated-stack (vhash-delete n stacks))))
+    (vhash-cons stack-number updated-stack (vhash-delete stack-number stacks))))
 
 (define (apply-instruction-9001 instruction stacks)
-  (let* (
-        (pop-result (pop-n-from-stack (instruction-count instruction) (instruction-origin instruction) stacks))
-        (value (car pop-result))
-        (popped-stacks (cdr pop-result)))
-    (push-n-to-stack (instruction-destination instruction) value popped-stacks)))
+  (move-items (instruction-count instruction) (instruction-origin instruction) (instruction-destination instruction) stacks))
 
 (define (apply-instructions-9001 instructions stacks) (fold apply-instruction-9001 stacks instructions))
 
