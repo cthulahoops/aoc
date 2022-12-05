@@ -1,5 +1,5 @@
 (define-module (aoc)
-  #:export (gather-list read-lines sum pipe>))
+  #:export (gather-list read-lines sum pipe> read-blocks read-block))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -11,6 +11,10 @@
         (reverse items)
         (loop (get-next) (cons item items)))))
 (define (read-lines) (gather-list read-line eof-object?))
+
+(define (read-blocks) (gather-list read-block null?))
+(define (read-block) (gather-list read-line block-end?))
+(define (block-end? line) (or (eof-object? line) (string-null? line)))
 
 (define (sum items) (fold + 0 items))
 
