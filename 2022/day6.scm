@@ -18,19 +18,12 @@
   (let loop ((count 0) (items items))
     (if (at-start? items packet-length) count (loop (+ count 1) (cdr items)))))
 
-(define (part1)
+(define (part packet-length)
   (pipe>
     (with-input-from-file "input/6" read-line)
     (string->list)
-    (find-start 4)
-    (+ 4)))
+    (find-start packet-length)
+    (+ packet-length)))
 
-(define (part2)
-  (pipe>
-    (with-input-from-file "input/6" read-line)
-    (string->list)
-    (find-start 14)
-    (+ 14)))
-
-(format #t "Part 1: ~s\n" (part1))
-(format #t "Part 2: ~s\n" (part2))
+(format #t "Part 1: ~s\n" (part 4))
+(format #t "Part 2: ~s\n" (part 14))
