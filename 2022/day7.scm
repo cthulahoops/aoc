@@ -52,16 +52,20 @@
 (define (cd? cmd) (equal? (car cmd) "cd"))
 (define (cd-arg cmd) (cadr cmd))
 
+(define (cd-destination arg pwd)
+  (cond ((equal? "/" arg) (list))
+        ((equal? ".." arg) (cdr pwd))
+        (else (cons arg pwd))))
+
 (define (handle-command command-response vm)
   (let (
       (command (car command-response))
-      (response (cdr command-response)))
+      (response (cdr command-response))
+      (pwd (vm-pwd vm))
+      (fs (vm-fs vm)))
     (if (cd? command)
-      (cond
-        ((equal? "/" (cd-arg command)) (make-vm (list) (vm-fs vm)))
-        ((equal? ".." (cd-arg command)) (make-vm (cdr (vm-pwd vm)) (vm-fs vm)))
-        (else (make-vm (cons (cd-arg command) (vm-pwd vm)) (vm-fs vm))))
-      (make-vm (vm-pwd vm) (append (map (lambda (x) (cons (vm-pwd vm) (parse-entry x))) response) (vm-fs vm)))
+      (make-vm (cd-destination (cd-arg command) pwd) fs)
+      (make-vm pwd (append (map (lambda (x) (cons pwd (parse-entry x))) response) fs))
       )))
 
 (define (run-vm-with-history command-history)
@@ -91,12 +95,16 @@
 (define (compute-directory-sizes vm)
   (fold count-entry (make-counter) vm))
 
-(define (part1)
-   (pipe>
+(define (load-and-compute-sizes)
+  (pipe>
      (with-input-from-file "input/7" read-lines)
      (split-command-responses)
      (run-vm-with-history)
-     (compute-directory-sizes)
+     (compute-directory-sizes)))
+
+(define (part1)
+   (pipe>
+     (load-and-compute-sizes)
      (vlist->list)
      (filter (lambda (x) (<= (cdr x) 100000)))
      (map cdr)
@@ -105,11 +113,8 @@
 (define (sort-by-size x) (sort x (lambda (x y) (< (cdr x) (cdr y)))))
 
 (define (part2)
-   (let* ((directory-sizes (pipe>
-         (with-input-from-file "input/7" read-lines)
-         (split-command-responses)
-         (run-vm-with-history)
-         (compute-directory-sizes)))
+   (let* (
+       (directory-sizes (load-and-compute-sizes))
        (total-used (cdr (vhash-assoc "/" directory-sizes)))
        (available-space (- 70000000 total-used))
        (needed-deletion (- 30000000 available-space)))
