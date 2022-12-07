@@ -4,6 +4,7 @@
 (use-modules (ice-9 format))
 (use-modules (srfi srfi-1))
 (use-modules (srfi srfi-9))
+(use-modules (srfi srfi-11))
 (use-modules (ice-9 vlist))
 (use-modules (aoc))
 
@@ -36,18 +37,15 @@
       (make-file name (string->number size)))))
 
 (define (get-command lines)
-  (call-with-values
-    (lambda () (span (lambda (x) (not (string-prefix? "$ " x))) (cdr lines)))
-    (lambda (response rest) (values (parse-command (car lines)) response rest))))
+  (let-values (((response rest) (span (lambda (x) (not (string-prefix? "$ " x))) (cdr lines))))
+    (values (parse-command (car lines)) response rest)))
 
 (define (split-command-responses lines)
   (let loop ((lines lines) (result (list)))
     (if (null? lines)
       (reverse result)
-      (call-with-values
-        (lambda () (get-command lines))
-        (lambda (command response rest)
-          (loop rest (cons (cons command response) result)))))))
+      (let-values (((command response rest) (get-command lines)))
+        (loop rest (cons (cons command response) result))))))
 
 (define (cd? cmd) (equal? (car cmd) "cd"))
 (define (cd-arg cmd) (cadr cmd))
