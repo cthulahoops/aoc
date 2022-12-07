@@ -1,5 +1,5 @@
 (define-module (aoc)
-  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists))
+  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists minimum))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -31,3 +31,4 @@
       )
 
 (define (zip-lists args) (apply map-in-order (cons list (map string->list args))))
+(define (minimum items) (car (sort items <)))

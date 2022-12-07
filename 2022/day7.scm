@@ -4,8 +4,10 @@
 (use-modules (ice-9 format))
 (use-modules (srfi srfi-1))
 (use-modules (srfi srfi-9))
+(use-modules (srfi srfi-9 gnu))
 (use-modules (srfi srfi-11))
 (use-modules (ice-9 vlist))
+(use-modules (ice-9 match))
 (use-modules (aoc))
 
 (define-record-type <file>
@@ -19,11 +21,11 @@
   dir?
   (name dir-name))
 
-(define-record-type <vm>
+(define-immutable-record-type <vm>
   (make-vm pwd fs)
   vm?
-  (pwd vm-pwd)
-  (fs vm-fs))
+  (pwd vm-pwd set-vm-pwd)
+  (fs vm-fs set-vm-fs))
 
 (define (parse-command cmd) (string-split (drop-$ cmd) #\space))
 (define (drop-$ cmd) (substring cmd 2))
@@ -47,13 +49,13 @@
       (let-values (((command response rest) (get-command lines)))
         (loop rest (cons (cons command response) result))))))
 
-(define (cd? cmd) (equal? (car cmd) "cd"))
-(define (cd-arg cmd) (cadr cmd))
-
 (define (cd-destination arg pwd)
-  (cond ((equal? "/" arg) (list))
-        ((equal? ".." arg) (cdr pwd))
-        (else (cons arg pwd))))
+  (match arg ("/" (list))
+             (".." (cdr pwd))
+             (dir (cons arg pwd))))
+
+(define (response->pwd-entries pwd response)
+  (map (lambda (x) (cons pwd (parse-entry x))) response))
 
 (define (handle-command command-response vm)
   (let (
@@ -61,18 +63,21 @@
       (response (cdr command-response))
       (pwd (vm-pwd vm))
       (fs (vm-fs vm)))
-    (if (cd? command)
-      (make-vm (cd-destination (cd-arg command) pwd) fs)
-      (make-vm pwd (append (map (lambda (x) (cons pwd (parse-entry x))) response) fs))
-      )))
+    (match (car command)
+      ("cd" (set-vm-pwd vm (cd-destination (cadr command) pwd)))
+      ("ls" (set-vm-fs vm (append (response->pwd-entries pwd response) fs))))))
 
 (define (run-vm-with-history command-history)
   (vm-fs (fold handle-command (make-vm (list) (list)) command-history)))
 
 (define (make-counter) (alist->vhash (list)))
 (define (count key value counter)
-  (let ((old-count (cdr (or (vhash-assoc key counter) (cons key 0)))))
-         (vhash-cons key (+ old-count value) (vhash-delete key counter))))
+  (let* ((old-count (counter-get key counter))
+         (new-count (+ old-count value)))
+         (vhash-cons key new-count (vhash-delete key counter))))
+(define (counter-get key counter)
+  (cdr (or (vhash-assoc key counter) (cons key 0))))
+(define counter->list vlist->list)
 
 (define (pwd->path pwd) (string-append "/" (string-join (reverse pwd) "/")))
 (define (paths pwd)
@@ -80,7 +85,6 @@
     (null? pwd)
     (list "/")
     (cons (pwd->path pwd) (paths (cdr pwd)))))
-
 
 (define (count-entry pwd-entry counter)
   (let ((pwd (car pwd-entry)) (entry (cdr pwd-entry)))
@@ -103,24 +107,25 @@
 (define (part1)
    (pipe>
      (load-and-compute-sizes)
-     (vlist->list)
-     (filter (lambda (x) (<= (cdr x) 100000)))
-     (map cdr)
+     (counter->list)
+     (map directory-size)
+     (filter (lambda (x) (<= x 100000)))
      (sum)))
 
-(define (sort-by-size x) (sort x (lambda (x y) (< (cdr x) (cdr y)))))
+(define directory-size cdr)
 
 (define (part2)
    (let* (
        (directory-sizes (load-and-compute-sizes))
-       (total-used (cdr (vhash-assoc "/" directory-sizes)))
+       (total-used (counter-get  "/" directory-sizes))
        (available-space (- 70000000 total-used))
        (needed-deletion (- 30000000 available-space)))
      (pipe>
-       (filter (lambda (x) (>= (cdr x) needed-deletion)) (vlist->list directory-sizes))
-       (sort-by-size)
-       (car)
-       (cdr))))
+       (counter->list directory-sizes)
+       (map directory-size)
+       (filter (lambda (x) (>= x needed-deletion)) )
+       (minimum)
+       )))
 
 (format #t "Part 1: ~s\n" (part1))
 (format #t "Part 2: ~s\n" (part2))
