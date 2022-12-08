@@ -56,12 +56,11 @@
     stack-picture
     (zip-lists)
     (filter is-stack?)
-    (map (lambda (x) (cons (digit->number (stack-number x)) (filter char-alphabetic? x))))
+    (map (lambda (x) (cons (character->number (stack-number x)) (filter char-alphabetic? x))))
     (alist->vhash)
     ))
 
 (define (stack-number x) (car (last-pair x)))
-(define (digit->number x) (string->number (list->string (list x))))
 (define (is-stack? x) (char-numeric? (stack-number x)))
 
 (define (parse-instruction instruction)
@@ -73,7 +72,7 @@
 
 (define (read-loading-instructions)
   (list
-    (to-stacks (read-block))
+    (to-stacks (map string->list (read-block)))
     (map parse-instruction (read-lines))))
 
 ; Output
