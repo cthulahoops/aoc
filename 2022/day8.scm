@@ -3,11 +3,6 @@
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 format))
 (use-modules (srfi srfi-1))
-(use-modules (srfi srfi-9))
-(use-modules (srfi srfi-9 gnu))
-(use-modules (srfi srfi-11))
-(use-modules (ice-9 vlist))
-(use-modules (ice-9 match))
 (use-modules (aoc))
 
 ; Input parsing:
