@@ -1,7 +1,3 @@
-(add-to-load-path ".")
-(use-modules (ice-9 format))
-(use-modules (ice-9 rdelim))
-(use-modules (ice-9 textual-ports))
 (use-modules (srfi srfi-9))
 (use-modules (aoc))
 
@@ -28,17 +24,14 @@
 
 (define (part1)
   (pipe>
-    (with-input-from-file "input/4" read-lines)
+    (read-lines)
     (map parse-line)
     (filter (lambda (x) (or (range-contains? (car x) (cadr x)) (range-contains? (cadr x) (car x)))))
     (length)))
 
 (define (part2)
   (pipe>
-    (with-input-from-file "input/4" read-lines)
+    (read-lines)
     (map parse-line)
     (filter (lambda (x) (apply range-overlaps? x)))
     (length)))
-
-(format #t "Part 1: ~d\n" (part1))
-(format #t "Part 2: ~d\n" (part2))

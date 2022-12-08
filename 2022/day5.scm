@@ -1,7 +1,4 @@
 (add-to-load-path ".")
-(use-modules (ice-9 format))
-(use-modules (ice-9 rdelim))
-(use-modules (ice-9 textual-ports))
 (use-modules (ice-9 regex))
 (use-modules (ice-9 vlist))
 (use-modules (srfi srfi-9))
@@ -84,11 +81,8 @@
 
 (define (part crane-function)
   (let* (
-        (input (with-input-from-file "input/5" read-loading-instructions))
+        (input (read-loading-instructions))
         (stacks (car input))
         (instructions (cadr input))
         (final-stacks (crane-function instructions stacks)))
     (stack-heads final-stacks)))
-
-(format #t "Part 1: ~s\n" (part1))
-(format #t "Part 2: ~s\n" (part2))

@@ -1,7 +1,4 @@
-(add-to-load-path ".")
-(use-modules (ice-9 format))
 (use-modules (ice-9 rdelim))
-(use-modules (ice-9 textual-ports))
 (use-modules (aoc))
 
 (define (priority char)
@@ -21,17 +18,14 @@
 
 (define (part1)
   (pipe>
-    (with-input-from-file "input/3" read-lines)
+    (read-lines)
     (map common-element-in-rucksack)
     (map priority)
     (sum)))
 
 (define (part2)
   (pipe>
-    (with-input-from-file "input/3" read-groups)
+    (read-groups)
     (map common-element)
     (map priority)
     (sum)))
-
-(format #t "Part 1: ~d\n" (part1))
-(format #t "Part 2: ~d\n" (part2))

@@ -1,6 +1,4 @@
-(add-to-load-path ".")
 (use-modules (ice-9 match))
-(use-modules (ice-9 format))
 (use-modules (aoc))
 
 (define (move-value move) (match move ('rock 1) ('paper 2) ('scissors 3)))
@@ -26,16 +24,12 @@
 (define (round-score elf me) (+ (winner-score me elf) (move-value me)))
 
 (define (parse-line line) (let ((moves (string-split line #\space))) (list (parse-elf-move (car moves)) (parse-my-move (cadr moves)))))
-(define input-lines (with-input-from-file "input/2" read-lines))
-(define input1 (map parse-line input-lines))
+(define (input1) (map parse-line (read-lines)))
 
-(define part1 (sum (map (lambda (moves) (apply round-score moves)) input1)))
-(format #t "Part 1: ~d\n" part1)
+(define (part1) (sum (map (lambda (moves) (apply round-score moves)) (input1))))
 
 (define (parse-line-correctly line) (let ((moves (string-split line #\space))) (list (parse-elf-move (car moves)) (parse-outcome (cadr moves)))))
-(define input2 (map parse-line-correctly input-lines))
+(define (input2) (map parse-line-correctly (read-lines)))
 
 (define line-score (match-lambda ((elf-move outcome) (round-score elf-move (move-needed elf-move outcome)))))
-
-(define part2 (sum (map line-score input2)))
-(format #t "Part 2: ~d\n" part2)
+(define (part2) (sum (map line-score (input2))))

@@ -1,7 +1,4 @@
-(add-to-load-path ".")
-(use-modules (ice-9 textual-ports))
 (use-modules (ice-9 rdelim))
-(use-modules (ice-9 format))
 (use-modules (aoc))
 
 (define (at-start? items packet-length) (all-distinct (list-head items packet-length)))
@@ -18,12 +15,12 @@
   (let loop ((count 0) (items items))
     (if (at-start? items packet-length) count (loop (+ count 1) (cdr items)))))
 
-(define (part packet-length)
+(define (find-marker packet-length)
   (pipe>
-    (with-input-from-file "input/6" read-line)
+    (read-line)
     (string->list)
     (find-start packet-length)
     (+ packet-length)))
 
-(format #t "Part 1: ~s\n" (part 4))
-(format #t "Part 2: ~s\n" (part 14))
+(define (part1) (find-marker 4))
+(define (part2) (find-marker 14))
