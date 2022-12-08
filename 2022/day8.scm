@@ -10,6 +10,7 @@
 (use-modules (ice-9 match))
 (use-modules (aoc))
 
+; Input parsing:
 (define (tree-line-heights line)
   (pipe>
     (string->list line)
@@ -20,6 +21,8 @@
       (with-input-from-file "input/8" read-lines)
       (map tree-line-heights)))
 
+
+; Part 1:
 (define (visible-from-side trees)
   (let loop ((visible (list)) (blocking -1) (trees trees))
     (if (null? trees)
@@ -28,17 +31,53 @@
             (loop (cons #t visible) (car trees) (cdr trees))
             (loop (cons #f visible) blocking (cdr trees))))))
 
+(define (|| x y) (or x y))
+
+(define (zip-or list1 list2) 
+  (map-in-order || list1 list2))
+
+(define (visible-from-either-end trees)
+  (zip-or (visible-from-side trees) (reverse (visible-from-side (reverse trees)))))
+
+(define (visible-from-left-right forest)
+  (map visible-from-either-end forest))
+
+(define (visible-from-top-bottom forest)
+  (apply-rotated visible-from-left-right forest))
+
+(define (visibility forest)
+  (map-in-order zip-or (visible-from-left-right forest) (visible-from-top-bottom forest)))
+
+(define (count-true items) (sum (map (lambda (x) (if x 1 0)) items)))
+(define (count-visible visibility) (sum (map count-true visibility)))
+
+; Part 2
+(define (trees-seen-from-tree tree trees)
+  (length (take-until (lambda (x) (>= x tree)) trees)))
+
 (define (trees-seen trees)
   (map (lambda (viewing-point) (trees-seen-from-tree (car viewing-point) (cdr viewing-point))) (tails trees)))
 
+(define (scenic-either-end trees)
+  (map-in-order * (trees-seen trees) (reverse (trees-seen (reverse trees)))))
+
+(define (scenic-left-right forest)
+  (map scenic-either-end forest))
+
+(define (scenic-top-bottom forest)
+  (apply-rotated scenic-left-right forest))
+
+(define (scenic forest)
+  (merge-grids * (scenic-left-right forest) (scenic-top-bottom forest)))
+
+; Helper functions:
+(define (apply-rotated f grid) (zip-lists (f (zip-lists grid))))
+(define (merge-grids f a b) (map-in-order (lambda (x y) (map-in-order f x y)) a b))
 (define (tails lst)
   (if
     (null? lst)
     (list)
     (cons lst (tails (cdr lst)))))
-
-(define (trees-seen-from-tree tree trees)
-  (length (take-until (lambda (x) (>= x tree)) trees)))
 
 (define (take-until f lst)
   (if
@@ -48,66 +87,14 @@
         (list (car lst))
         (cons (car lst) (take-until f (cdr lst))))))
 
-(define (zip-or list1 list2) 
-  (map-in-order (lambda (x y) (or x y)) list1 list2))
+(define (reduce-grid f grid) (f (map f grid)))
+(define (map-grid f grid) (map (lambda (line) (map f line)) grid))
 
-(define (visible-from-either-end trees)
-  (zip-or (visible-from-side trees) (reverse (visible-from-side (reverse trees)))))
-
-(define (visible-from-left-right forest)
-  (map visible-from-either-end forest))
-
-(define (visible-from-top-bottom forest)
-  (pipe> 
-    (zip-lists forest)
-    (visible-from-left-right)
-    (zip-lists)))
-
-(define (merge-visibility visibility1 visibility2)
-  (map-in-order zip-or visibility1 visibility2))
-
-(define (count-true items) (sum (map (lambda (x) (if x 1 0)) items)))
-(define (count-visible visibility) (sum (map count-true visibility)))
-
-; Part 2
-(define (zip-* list1 list2) 
-  (map-in-order * list1 list2))
-
-(define (scenic-either-end trees)
-  (zip-* (trees-seen trees) (reverse (trees-seen (reverse trees)))))
-
-(define (scenic-left-right forest)
-  (map scenic-either-end forest))
-
-(define (scenic-top-bottom forest)
-  (pipe> 
-    (zip-lists forest)
-    (scenic-left-right)
-    (zip-lists)))
-
-(define (merge-scenic scenic1 scenic2)
-  (map-in-order zip-* scenic1 scenic2))
-
-(define (display-lines lines)
-  (map (lambda (x) (begin (display x) (newline))) lines)
-  (newline)
-  lines)
-
+; Main
 (define (main args)
     (let* (
            (forest (tree-heights))
-           (left-right (visible-from-left-right forest))
-           (top-bottom (visible-from-top-bottom forest))
-           (visibility (merge-visibility left-right top-bottom))
-           (scenic-left-right (scenic-left-right forest))
-           (scenic-top-bottom (scenic-top-bottom forest))
-           (scenic (merge-scenic scenic-left-right scenic-top-bottom)))
-      ; (display-lines forest)
-      ; (display-lines left-right)
-      ; (display-lines top-bottom)
-      ; (display-lines visibility)
-      (format #t "Part 1: ~s\n\n" (count-visible visibility))
-      ; (display-lines scenic)
-      (format #t "Part 2: ~s\n" (maximum (map maximum scenic)))
-      )
-    (newline))
+           (visibility (visibility forest))
+           (scenic (scenic forest)))
+      (format #t "Part 1: ~s\n" (count-visible visibility))
+      (format #t "Part 2: ~s\n" (reduce-grid maximum scenic))))
