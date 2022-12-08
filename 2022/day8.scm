@@ -9,13 +9,12 @@
 (define (tree-line-heights line)
   (pipe>
     (string->list line)
-    (map (lambda (c) (string->number (list->string (list c)))))))
+    (map character->number)))
 
 (define (tree-heights)
     (pipe>
       (with-input-from-file "input/8" read-lines)
       (map tree-line-heights)))
-
 
 ; Part 1:
 (define (visible-from-side trees)

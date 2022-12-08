@@ -1,5 +1,5 @@
 (define-module (aoc)
-  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists minimum maximum display-lines))
+  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists minimum maximum display-lines character->number))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -29,6 +29,8 @@
        (rest-of-pipeline (cdr pipeline)))
       `(pipe> ,(append-item value next-item) . ,rest-of-pipeline)))
       )
+
+(define (character->number c) (string->number (list->string (list c))))
 
 ;; (define (zip-lists args) (apply map-in-order (cons list (map string->list args))))
 (define (zip-lists args) (apply map-in-order (cons list args)))
