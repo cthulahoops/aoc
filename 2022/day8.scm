@@ -28,7 +28,7 @@
 (define (|| x y) (or x y)) ; Or is a special form and can't be used as a function.
 
 (define (visible-from-either-end trees)
-  (map-in-order || (visible-from-side trees) (reverse (visible-from-side (reverse trees)))))
+  (map-in-order || (visible-from-side trees) (apply-reversed visible-from-side trees)))
 
 (define (visible-from-left-right forest)
   (map visible-from-either-end forest))
@@ -50,7 +50,7 @@
   (map (lambda (viewing-point) (trees-seen-from-tree (car viewing-point) (cdr viewing-point))) (tails trees)))
 
 (define (scenic-either-end trees)
-  (map-in-order * (trees-seen trees) (reverse (trees-seen (reverse trees)))))
+  (map-in-order * (trees-seen trees) (apply-reversed trees-seen trees)))
 
 (define (scenic-left-right forest)
   (map scenic-either-end forest))
@@ -63,6 +63,8 @@
 
 ; Helper functions:
 (define (apply-rotated f grid) (zip-lists (f (zip-lists grid))))
+(define (apply-reversed f line) (reverse (f (reverse line))))
+
 (define (merge-grids f a b) (map-in-order (lambda (x y) (map-in-order f x y)) a b))
 (define (tails lst)
   (if
