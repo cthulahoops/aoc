@@ -31,13 +31,10 @@
             (loop (cons #t visible) (car trees) (cdr trees))
             (loop (cons #f visible) blocking (cdr trees))))))
 
-(define (|| x y) (or x y))
-
-(define (zip-or list1 list2) 
-  (map-in-order || list1 list2))
+(define (|| x y) (or x y)) ; Or is a special form and can't be used as a function.
 
 (define (visible-from-either-end trees)
-  (zip-or (visible-from-side trees) (reverse (visible-from-side (reverse trees)))))
+  (map-in-order || (visible-from-side trees) (reverse (visible-from-side (reverse trees)))))
 
 (define (visible-from-left-right forest)
   (map visible-from-either-end forest))
@@ -46,7 +43,7 @@
   (apply-rotated visible-from-left-right forest))
 
 (define (visibility forest)
-  (map-in-order zip-or (visible-from-left-right forest) (visible-from-top-bottom forest)))
+  (merge-grids || (visible-from-left-right forest) (visible-from-top-bottom forest)))
 
 (define (count-true items) (sum (map (lambda (x) (if x 1 0)) items)))
 (define (count-visible visibility) (sum (map count-true visibility)))
