@@ -1,7 +1,3 @@
-(add-to-load-path ".")
-(use-modules (ice-9 textual-ports))
-(use-modules (ice-9 rdelim))
-(use-modules (ice-9 format))
 (use-modules (srfi srfi-1))
 (use-modules (srfi srfi-9))
 (use-modules (srfi srfi-9 gnu))
@@ -81,7 +77,7 @@
 
 (define (pwd->path pwd) (string-append "/" (string-join (reverse pwd) "/")))
 (define (paths pwd)
-  (if 
+  (if
     (null? pwd)
     (list "/")
     (cons (pwd->path pwd) (paths (cdr pwd)))))
@@ -99,7 +95,7 @@
 
 (define (load-and-compute-sizes)
   (pipe>
-     (with-input-from-file "input/7" read-lines)
+     (read-lines)
      (split-command-responses)
      (run-vm-with-history)
      (compute-directory-sizes)))
@@ -126,6 +122,3 @@
        (filter (lambda (x) (>= x needed-deletion)) )
        (minimum)
        )))
-
-(format #t "Part 1: ~s\n" (part1))
-(format #t "Part 2: ~s\n" (part2))

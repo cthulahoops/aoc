@@ -1,7 +1,5 @@
-(add-to-load-path ".")
 (use-modules (ice-9 textual-ports))
 (use-modules (ice-9 rdelim))
-(use-modules (ice-9 format))
 (use-modules (srfi srfi-1))
 (use-modules (aoc))
 
@@ -13,7 +11,7 @@
 
 (define (tree-heights)
     (pipe>
-      (with-input-from-file "input/8" read-lines)
+      (read-lines)
       (map tree-line-heights)))
 
 ; Part 1:
@@ -91,3 +89,12 @@
            (scenic (scenic forest)))
       (format #t "Part 1: ~s\n" (count-visible visibility))
       (format #t "Part 2: ~s\n" (reduce-grid maximum scenic))))
+
+(define (part1)
+   (pipe>
+     (tree-heights)
+     (visibility)
+     (count-visible)))
+
+(define (part2)
+   (pipe> (tree-heights) (scenic) (reduce-grid maximum)))
