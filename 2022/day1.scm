@@ -5,15 +5,10 @@
 
 (define (keep-biggest new items) (cdr (sort (cons new items) <)))
 
-(define (read-blocks) (gather-list read-block null?))
-(define (read-block) (map string->number (gather-list read-line block-end?)))
-(define (block-end? line) (or (eof-object? line) (string-null? line)))
-
-(define (maximum items) (fold max 0 items))
-
-(define blocks (with-input-from-file "input/1" read-blocks))
-
-(display (sum (fold keep-biggest '(0 0 0) (map sum blocks))))
+(define blocks
+  (pipe>
+    (with-input-from-file "input/1" read-blocks)
+    (map (lambda (line) (map string->number line)))))
 
 (define sorted-totals (sort (map sum blocks) >))
 
