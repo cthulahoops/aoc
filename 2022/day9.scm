@@ -19,7 +19,7 @@
 
 (define-immutable-record-type <rope>
   (make-rope knots history)
-  point?
+  rope?
   (knots rope-knots)
   (history rope-history))
 
@@ -65,11 +65,6 @@
          (tail (follow-head head (cdr (rope-knots rope)))))
     (make-rope (cons head tail) (cons (last tail) (rope-history rope)))))
 
-(define (apply-n-times n f v)
-  (let loop ((n n) (v v))
-    (if (= n 0)
-        v
-        (loop (- n 1) (f v)))))
 (define (apply-step step rope) (apply-n-times (step-count step) (lambda (x) (apply-direction-rope (step-direction step) x)) rope))
 
 (define (unique-points points)
@@ -77,8 +72,6 @@
     (fold (lambda (point counter) (counter-add point 1 counter)) (make-counter) points)
     (counter->list)
     (length)))
-
-(define (replicate n v) (if (= n 0) (list) (cons v (replicate (- n 1) v))))
 
 (define (simulate rope-length)
   (let*

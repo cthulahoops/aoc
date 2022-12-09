@@ -1,5 +1,7 @@
 (define-module (aoc)
-  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists minimum maximum display-lines character->number make-counter counter-get counter-add counter->list))
+  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists
+            minimum maximum replicate display-lines character->number
+            apply-n-times make-counter counter-get counter-add counter->list))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -37,6 +39,13 @@
 (define (zip-lists args) (apply map-in-order (cons list args)))
 (define (minimum items) (car (sort items <)))
 (define (maximum items) (car (sort items >)))
+(define (replicate n v) (if (= n 0) (list) (cons v (replicate (- n 1) v))))
+
+(define (apply-n-times n f v)
+  (let loop ((n n) (v v))
+    (if (= n 0)
+        v
+        (loop (- n 1) (f v)))))
 
 (define (display-lines lines)
   (map (lambda (x) (begin (display x) (newline))) lines)
