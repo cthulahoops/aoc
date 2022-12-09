@@ -66,15 +66,6 @@
 (define (run-vm-with-history command-history)
   (vm-fs (fold handle-command (make-vm (list) (list)) command-history)))
 
-(define (make-counter) (alist->vhash (list)))
-(define (count key value counter)
-  (let* ((old-count (counter-get key counter))
-         (new-count (+ old-count value)))
-         (vhash-cons key new-count (vhash-delete key counter))))
-(define (counter-get key counter)
-  (cdr (or (vhash-assoc key counter) (cons key 0))))
-(define counter->list vlist->list)
-
 (define (pwd->path pwd) (string-append "/" (string-join (reverse pwd) "/")))
 (define (paths pwd)
   (if
@@ -86,7 +77,7 @@
   (let ((pwd (car pwd-entry)) (entry (cdr pwd-entry)))
     (if
       (file? entry)
-      (fold (lambda (path counter) (count path (file-size entry) counter)) counter (paths pwd))
+      (fold (lambda (path counter) (counter-add path (file-size entry) counter)) counter (paths pwd))
       counter ; Directories don't themselves have a size
       )))
 

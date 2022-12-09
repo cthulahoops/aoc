@@ -1,5 +1,5 @@
 (define-module (aoc)
-  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists minimum maximum display-lines character->number make-counter count-items counter->list))
+  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists minimum maximum display-lines character->number make-counter counter-get counter-add counter->list))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -45,7 +45,7 @@
 
 ; Counter
 (define (make-counter) (alist->vhash (list)))
-(define (count-items key value counter)
+(define (counter-add key value counter)
   (let* ((old-count (counter-get key counter))
          (new-count (+ old-count value)))
          (vhash-cons key new-count (vhash-delete key counter))))

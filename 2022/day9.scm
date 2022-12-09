@@ -74,7 +74,7 @@
 
 (define (unique-points points)
   (pipe>
-    (fold (lambda (point counter) (count-items point 1 counter)) (make-counter) points)
+    (fold (lambda (point counter) (counter-add point 1 counter)) (make-counter) points)
     (counter->list)
     (length)))
 
