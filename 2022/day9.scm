@@ -72,16 +72,6 @@
         (loop (- n 1) (f v)))))
 (define (apply-step step rope) (apply-n-times (step-count step) (lambda (x) (apply-direction-rope (step-direction step) x)) rope))
 
-; Counter
-(define (make-counter) (alist->vhash (list)))
-(define (count-items key value counter)
-  (let* ((old-count (counter-get key counter))
-         (new-count (+ old-count value)))
-         (vhash-cons key new-count (vhash-delete key counter))))
-(define (counter-get key counter)
-  (cdr (or (vhash-assoc key counter) (cons key 0))))
-(define counter->list vlist->list)
-
 (define (unique-points points)
   (pipe>
     (fold (lambda (point counter) (count-items point 1 counter)) (make-counter) points)
