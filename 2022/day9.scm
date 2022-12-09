@@ -41,7 +41,7 @@
                    ("R" (set-point-x point (+ (point-x point) 1)))))
 
 
-(define (single-step value)
+(define (sign value)
   (cond ((< value -1) -1)
         ((> value 1) 1)
         (else value)))
@@ -50,7 +50,7 @@
   (let* ((dx (- (point-x head) (point-x tail)))
          (dy (- (point-y head) (point-y tail)))
          (furthest (max (abs dx) (abs dy)))
-         (step (if (<= furthest 1) (make-point 0 0) (make-point (single-step dx) (single-step dy)))))
+         (step (if (<= furthest 1) (make-point 0 0) (make-point (sign dx) (sign dy)))))
     (point-+ step tail)))
 
 (define (follow-head head knots)
