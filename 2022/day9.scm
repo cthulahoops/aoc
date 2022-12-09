@@ -40,10 +40,9 @@
                    ("L" (set-point-x point (- (point-x point) 1)))
                    ("R" (set-point-x point (+ (point-x point) 1)))))
 
-
 (define (sign value)
-  (cond ((< value -1) -1)
-        ((> value 1) 1)
+  (cond ((negative? value) -1)
+        ((positive? value) 1)
         (else value)))
 
 (define (step-towards head tail)
