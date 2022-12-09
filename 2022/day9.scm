@@ -66,18 +66,12 @@
 
 (define (apply-step step rope) (apply-n-times (step-count step) (lambda (x) (apply-direction-rope (step-direction step) x)) rope))
 
-(define (unique-points points)
-  (pipe>
-    (fold (lambda (point counter) (counter-add point 1 counter)) (make-counter) points)
-    (counter->list)
-    (length)))
-
 (define (simulate rope-length)
   (let*
     ((steps (read-steps))
      (rope (make-rope (replicate rope-length (make-point 0 0)) (list)))
      (final-rope (fold apply-step rope steps)))
-    (unique-points (cons (last (rope-knots final-rope)) (rope-history final-rope)))))
+    (count-unique (cons (last (rope-knots final-rope)) (rope-history final-rope)))))
 
 (define (part1) (simulate 2))
 (define (part2) (simulate 10))

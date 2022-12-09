@@ -1,6 +1,6 @@
 (define-module (aoc)
   #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists
-            minimum maximum replicate display-lines character->number
+            minimum maximum replicate display-lines character->number count-unique
             apply-n-times make-counter counter-get counter-add counter->list))
 
 (use-modules (ice-9 rdelim))
@@ -61,3 +61,9 @@
 (define (counter-get key counter)
   (cdr (or (vhash-assoc key counter) (cons key 0))))
 (define counter->list vlist->list)
+
+(define (count-unique items)
+  (pipe>
+    (fold (lambda (x counter) (counter-add x 1 counter)) (make-counter) items)
+    (counter->list)
+    (length)))
