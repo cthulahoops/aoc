@@ -21,8 +21,6 @@
 
 (define (sum items) (fold + 0 items))
 
-(define (append-item final-element items) (reverse (cons final-element (reverse items))))
-
 (define-macro (pipe> value . pipeline)
   (if
     (null? pipeline)
@@ -30,7 +28,7 @@
     (let*
       ((next-item (car pipeline))
        (rest-of-pipeline (cdr pipeline)))
-      `(pipe> ,(append-item value next-item) . ,rest-of-pipeline)))
+      `(pipe> ,(append next-item (list value)) . ,rest-of-pipeline)))
       )
 
 (define (character->number c) (string->number (list->string (list c))))
