@@ -14,12 +14,6 @@
   (match (string-split line #\space) (("noop") (list 0))
                                      (("addx" x) (list 0 (string->number x)))))
 
-(define (enumerate items)
-  (let loop ((count 1) (items items) (result (list)))
-    (if (null? items)
-        (reverse result)
-        (loop (+ 1 count) (cdr items) (cons (cons count (car items)) result)))))
-
 (define (apply-instruction ins vm)
   ; (display ins)
   ; (display "  ")
@@ -40,12 +34,6 @@
 (define (position->lit pixel-position sprite-position) (if (and (>= pixel-position (- sprite-position 1)) (<= pixel-position (+ sprite-position 1))) #\# #\space))
 (define (cycle->column cycle) (modulo (- cycle 1) 40))
 (define (visible enumerated) (map (lambda (pair) (position->lit (cycle->column (car pair)) (cdr pair))) enumerated))
-
-(define (chunk size items)
-  (let loop ((items items) (result (list)))
-    (if (null? items)
-        (reverse result)
-        (loop (drop items size) (cons (take items size) result)))))
 
 (define (part1)
   (let* ((instructions (apply append (map parse-instruction (read-lines))))

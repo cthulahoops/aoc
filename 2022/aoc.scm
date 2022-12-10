@@ -1,7 +1,8 @@
 (define-module (aoc)
   #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists
             minimum maximum replicate display-lines character->number count-unique
-            apply-n-times make-counter counter-get counter-add counter->list))
+            apply-n-times make-counter counter-get counter-add counter->list enumerate
+            chunk))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -19,7 +20,7 @@
 (define (read-block) (gather-list read-line block-end?))
 (define (block-end? line) (or (eof-object? line) (string-null? line)))
 
-(define (sum items) (fold + 0 items))
+(define (sum items) (apply + items))
 
 (define-macro (pipe> value . pipeline)
   (if
@@ -38,6 +39,18 @@
 (define (minimum items) (car (sort items <)))
 (define (maximum items) (car (sort items >)))
 (define (replicate n v) (if (= n 0) (list) (cons v (replicate (- n 1) v))))
+
+(define (enumerate items)
+  (let loop ((count 1) (items items) (result (list)))
+    (if (null? items)
+        (reverse result)
+        (loop (+ 1 count) (cdr items) (cons (cons count (car items)) result)))))
+
+(define (chunk size items)
+  (let loop ((items items) (result (list)))
+    (if (null? items)
+        (reverse result)
+        (loop (drop items size) (cons (take items size) result)))))
 
 (define (apply-n-times n f v)
   (let loop ((n n) (v v))
