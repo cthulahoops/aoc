@@ -2,14 +2,13 @@
 (use-modules (aoc))
 (use-modules (ice-9 match))
 (use-modules (srfi srfi-1))
-(use-modules (srfi srfi-9 gnu))
 
 (define (parse-instruction line)
   (match (string-split line #\space) (("noop") (list 0))
                                      (("addx" x) (list 0 (string->number x)))))
 
 (define (iterate f init items)
-  (fold (lambda (item acc) (cons (f item (car acc)) acc)) (list init) items))
+  (reverse (fold (lambda (item acc) (cons (f item (car acc)) acc)) (list init) items)))
 
 (define (pair-* pair) (* (car pair) (cdr pair)))
 
@@ -26,18 +25,18 @@
 (define (part1)
   (pipe> (read-instructions)
          (iterate + 1)
-         (reverse)
          (enumerate)
          (compute-result)
          ))
 
 (define (format-image lines) (string-append "\n" (string-join (map list->string lines) "\n") "\n"))
 
+(define (flip f) (lambda (x y) (f y x)))
+
 (define (part2)
   (pipe> (read-instructions)
          (iterate + 1)
-         (cdr)
-         (reverse)
+         ((flip take) (* 6 40))
          (enumerate)
          (visible)
          (chunk 40)
