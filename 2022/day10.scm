@@ -59,6 +59,8 @@
            (compute-result)
            )))
 
+(define (format-image lines) (string-append "\n" (string-join (map list->string lines) "\n") "\n"))
+
 (define (part2)
   (let* ((instructions (apply append (map parse-instruction (read-lines))))
          (init-vm (make-vm 1 (list))))
@@ -68,6 +70,5 @@
            (enumerate)
            (visible)
            (chunk 40)
-           (map list->string)
-           (display-lines)
+           (format-image)
            )))
