@@ -7,18 +7,16 @@
   (match (string-split line #\space) (("noop") (list 0))
                                      (("addx" x) (list 0 (string->number x)))))
 
-(define (iterate f init items)
-  (reverse (fold (lambda (item acc) (cons (f item (car acc)) acc)) (list init) items)))
-
-(define (pair-* pair) (* (car pair) (cdr pair)))
+(define (apply-pair f pair) (f (car pair) (cdr pair)))
+(define (pair-* pair) (apply-pair * pair))
 
 (define (compute-result enumerated)
   (let ((relevant (map (lambda (step) (assq step enumerated)) (list 20 60 100 140 180 220))))
     (sum (map pair-* relevant))))
 
-(define (position->lit pixel-position sprite-position) (if (<= (abs (- pixel-position sprite-position)) 1) #\# #\space))
+(define (position->lit pixel-position sprite-position) (if (<= (abs (- (cycle->column pixel-position) sprite-position)) 1) #\# #\space))
 (define (cycle->column cycle) (modulo (- cycle 1) 40))
-(define (visible enumerated) (map (lambda (pair) (position->lit (cycle->column (car pair)) (cdr pair))) enumerated))
+(define (visible enumerated) (map (lambda (pair) (apply-pair position->lit pair)) enumerated))
 
 (define (read-instructions) (apply append (map parse-instruction (read-lines))))
 

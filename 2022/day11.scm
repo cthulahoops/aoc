@@ -87,7 +87,6 @@
         result
         (loop (+ i 1) (add-result (f) result)))))
 
-
 (define (read-monkeys) (gather-list read-monkey eof-object?))
 (define (part1)
   (let* ((monkeys (read-monkeys))

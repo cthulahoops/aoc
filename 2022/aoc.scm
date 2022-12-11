@@ -2,7 +2,7 @@
   #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists
             minimum maximum replicate display-lines character->number count-unique
             apply-n-times make-counter counter-get counter-add counter->list enumerate
-            chunk))
+            range chunk iterate))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -58,6 +58,9 @@
         v
         (loop (- n 1) (f v)))))
 
+(define (iterate f init items)
+  (reverse (fold (lambda (item acc) (cons (f item (car acc)) acc)) (list init) items)))
+
 (define (display-lines lines)
   (map (lambda (x) (begin (display x) (newline))) lines)
   (newline)
@@ -78,3 +81,10 @@
     (fold (lambda (x counter) (counter-add x 1 counter)) (make-counter) items)
     (counter->list)
     (length)))
+
+(define (range n m)
+  (let loop ((n n) (result (list)))
+    (if
+      (> n m)
+      (reverse result)
+      (loop (+ n 1) (cons n result)))))
