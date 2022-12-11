@@ -26,7 +26,7 @@
 
 (define (parse-operation operation)
   (let ((elements (map parse-operation-element (string-split operation #\space))))
-    (eval (list 'lambda (list 'old) (list (cadr elements) (car elements) (caddr elements))) (interaction-environment))))
+    (eval (list 'lambda (list 'old) (list (second elements) (first elements) (third elements))) (interaction-environment))))
 
 (define (trim s) (substring s (string-index s char-numeric?)))
 
@@ -70,13 +70,6 @@
 
 (define (compute-monkey-business inspections)
   (apply * (take (sort inspections >) 2)))
-
-(define (range n m)
-  (let loop ((n n) (result (list)))
-    (if
-      (> n m)
-      (reverse result)
-      (loop (+ n 1) (cons n result)))))
 
 (define (add-result new old)
   (if (null? old) new (map-in-order + new old)))
