@@ -8,15 +8,13 @@
 (use-modules (srfi srfi-13))
 
 (define-record-type <monkey>
-  (make-monkey id valuables operation test next-true next-false trail)
+  (make-monkey id operation divisor next-true next-false)
   monkey?
   (id monkey-id)
-  (valuables monkey-valuables)
   (operation monkey-operation)
-  (test monkey-test)
+  (divisor monkey-divisor)
   (next-true monkey-next-true)
-  (next-false monkey-next-false)
-  (trail monkey-trail))
+  (next-false monkey-next-false))
 
 (define (string-first-group regex string) (match:substring (string-match regex string) 1))
 
@@ -34,15 +32,14 @@
   (let ((first-line (read-line)))
     (if (eof-object? first-line)
         first-line
-        (make-monkey
-          (string->number (string-first-group "Monkey ([0-9]+):" first-line))
-          (map (compose string->number trim) (string-split (string-first-group " *Starting items: ([0-9, ]+)" (read-line)) #\,))
-          (parse-operation (string-first-group " *Operation: new = (.*)" (read-line)))
-          (string->number (string-first-group " Test: divisible by ([0-9]+)" (read-line)))
-          (string->number (string-first-group " If true: throw to monkey ([0-9])" (read-line)))
-          (string->number (string-first-group " If false: throw to monkey ([0-9])" (read-line)))
-          (read-line)
-        ))))
+        (let ((id (string->number (string-first-group "Monkey ([0-9]+):" first-line)))
+              (valuables (map (compose string->number trim) (string-split (string-first-group " *Starting items: ([0-9, ]+)" (read-line)) #\,)))
+              (operation (parse-operation (string-first-group " *Operation: new = (.*)" (read-line))))
+              (divisor (string->number (string-first-group " *Test: divisible by ([0-9]+)" (read-line))))
+              (next-true (string->number (string-first-group " *If true: throw to monkey ([0-9])" (read-line))))
+              (next-false (string->number (string-first-group " If false: throw to monkey ([0-9])" (read-line)))))
+          (read-line) ; Discard line separating monkeys
+          (cons (make-monkey id operation divisor next-true next-false) valuables)))))
 
 (define (alist->hash-table alist)
   (let ((table (make-hash-table)))
@@ -56,7 +53,7 @@
 (define (apply-monkey-business! calming table monkey valuable)
   (let* ((played-with ((monkey-operation monkey) valuable))
          (calmed (calming played-with))
-         (next-monkey (if (= (modulo calmed (monkey-test monkey)) 0) (monkey-next-true monkey) (monkey-next-false monkey))))
+         (next-monkey (if (= (modulo calmed (monkey-divisor monkey)) 0) (monkey-next-true monkey) (monkey-next-false monkey))))
     (throw-to! table next-monkey calmed)))
 
 (define (run-monkey! calming table monkey)
@@ -82,8 +79,9 @@
 
 (define (read-monkeys) (gather-list read-monkey eof-object?))
 (define (part1)
-  (let* ((monkeys (read-monkeys))
-         (init_valuables (map (lambda (monkey) (cons (monkey-id monkey) (reverse (monkey-valuables monkey)))) monkeys))
+  (let* ((monkey-valuables (read-monkeys))
+         (monkeys (map car monkey-valuables))
+         (init_valuables (map (lambda (monkey-valuable) (cons (monkey-id (car monkey-valuable)) (reverse (cdr monkey-valuable)))) monkey-valuables))
          (valuable-table (alist->hash-table init_valuables))
          (calming (lambda (value) (floor (/ value 3)))))
     (pipe>
@@ -91,10 +89,11 @@
       (compute-monkey-business))))
 
 (define (part2)
-  (let* ((monkeys (read-monkeys))
-         (init_valuables (map (lambda (monkey) (cons (monkey-id monkey) (reverse (monkey-valuables monkey)))) monkeys))
+  (let* ((monkey-valuables (read-monkeys))
+         (monkeys (map car monkey-valuables))
+         (init_valuables (map (lambda (monkey-valuable) (cons (monkey-id (car monkey-valuable)) (reverse (cdr monkey-valuable)))) monkey-valuables))
          (valuable-table (alist->hash-table init_valuables))
-         (calming-factor (apply * (map monkey-test monkeys)))
+         (calming-factor (apply * (map monkey-divisor monkeys)))
          (calming (lambda (value) (modulo value calming-factor))))
     (pipe>
       (main-loop (lambda () (run-monkey-round! calming valuable-table monkeys)) 10000)
