@@ -35,7 +35,7 @@
                 (#\E (height #\z))
                 (letter (char->integer letter))))
 
-(define (search next done? start)
+(define (dijkstra next done? start)
   (let loop ((queue (enq! (make-q) (cons start 0)))
              (visited (make-hash-table)))
     (if
@@ -90,7 +90,7 @@
     ;   (display-lines)
     ;   (length)
     ;   )
-    (search next done? start)))
+    (dijkstra next done? start)))
 
 (define (part2)
   (let* ((grid-points (read-grid))
@@ -100,4 +100,4 @@
         (next (lambda (current) (reachable grid current (flip climbable))))
         (done? (lambda (current) (= (hash-ref grid current) (char->integer #\a))))
         )
-    (search next done? end)))
+    (dijkstra next done? end)))
