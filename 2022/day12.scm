@@ -18,6 +18,11 @@
         (height (hash-ref grid point)))
     (filter (lambda (neighbour) (let ((neighbour-height (hash-ref grid neighbour))) (and neighbour-height (<= (- neighbour-height height) 1)))) neighbours)))
 
+(define (reachable-backwards grid point)
+  (let ((neighbours (neighbours point))
+        (height (hash-ref grid point)))
+    (filter (lambda (neighbour) (let ((neighbour-height (hash-ref grid neighbour))) (and neighbour-height (<= (- height neighbour-height) 1)))) neighbours)))
+
 (define (neighbours point)
   (list (point-+ point (make-point 1 0))
         (point-+ point (make-point -1 0))
@@ -32,7 +37,7 @@
                 (#\E (height #\z))
                 (letter (char->integer letter))))
 
-(define (search grid start end)
+(define (search next done? start)
   (let loop ((queue (enq! (make-q) (cons start 0)))
              (visited (make-hash-table)))
     (if
@@ -47,10 +52,10 @@
           (begin
             (hash-set! visited current distance)
             (if
-              (equal? current end)
+              (done? current)
               distance
               (begin
-                (map (lambda (item) (enq! queue (cons item (+ distance 1)))) (reachable grid current))
+                (map (lambda (item) (enq! queue (cons item (+ distance 1)))) (next current))
                 (loop queue visited)))))))))
 
 (define (find-start point-list) (find #\S point-list))
@@ -74,7 +79,8 @@
         (start (find-start grid-points))
         (end (find-end grid-points))
         (grid (alist->hash-table (map-cdr height grid-points)))
-        (result (search grid start end))
+        (next (lambda (current) (reachable grid current)))
+        (done? (lambda (current) (equal? current end)))
         )
     (format #t "Start: ~s\n" start)
     (format #t "End: ~s\n" end)
@@ -86,16 +92,14 @@
     ;   (display-lines)
     ;   (length)
     ;   )
-    result
-    ))
+    (search next done? start)))
 
 (define (part2)
   (let* ((grid-points (read-grid))
-        (starts (find-starts grid-points))
+        (start (find-start grid-points))
         (end (find-end grid-points))
         (grid (alist->hash-table (map-cdr height grid-points)))
-        ; (result )
+        (next (lambda (current) (reachable-backwards grid current)))
+        (done? (lambda (current) (= (hash-ref grid current) (char->integer #\a))))
         )
-    (format #t "Starts: ~s\n" (length starts))
-    (format #t "End: ~s\n" end)
-    (minimum (map (lambda (start) (search grid start end)) starts))))
+    (search next done? end)))
