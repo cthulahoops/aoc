@@ -2,12 +2,16 @@
   #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists
             minimum maximum replicate display-lines character->number count-unique
             apply-n-times make-counter counter-get counter-add counter->list enumerate
-            range chunk iterate))
+            range chunk iterate
+            alist->hash-table
+            make-point point-x point-y point? set-point-x set-point-y point-+))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
 (use-modules (ice-9 vlist))
 (use-modules (srfi srfi-1))
+(use-modules (srfi srfi-9 gnu))
+(use-modules (ice-9 q))
 
 (define (gather-list get-next end?)
   (let loop ((item (get-next)) (items (list)))
@@ -88,3 +92,19 @@
       (> n m)
       (reverse result)
       (loop (+ n 1) (cons n result)))))
+
+
+(define-immutable-record-type <point>
+  (make-point x y)
+  point?
+  (x point-x set-point-x)
+  (y point-y set-point-y))
+
+(define (point-+ p1 p2) (make-point (+ (point-x p1) (point-x p2)) (+ (point-y p1) (point-y p2))))
+
+(define (alist->hash-table alist)
+  (let ((table (make-hash-table)))
+    (map (lambda (pair) (hash-set! table (car pair) (cdr pair))) alist)
+    table
+    ))
+
