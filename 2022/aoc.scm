@@ -4,6 +4,7 @@
             apply-n-times make-counter counter-get counter-add counter->list enumerate
             range chunk iterate
             alist->hash-table
+            flip
             make-point point-x point-y point? set-point-x set-point-y point-+))
 
 (use-modules (ice-9 rdelim))
@@ -11,7 +12,6 @@
 (use-modules (ice-9 vlist))
 (use-modules (srfi srfi-1))
 (use-modules (srfi srfi-9 gnu))
-(use-modules (ice-9 q))
 
 (define (gather-list get-next end?)
   (let loop ((item (get-next)) (items (list)))
@@ -108,3 +108,4 @@
     table
     ))
 
+(define (flip f) (lambda (x y) (f y x)))

@@ -13,15 +13,13 @@
         (data (cdr line)))
     (map (lambda (item) (cons (make-point (car item) row) (cdr item))) data)))
 
-(define (reachable grid point)
-  (let ((neighbours (neighbours point))
-        (height (hash-ref grid point)))
-    (filter (lambda (neighbour) (let ((neighbour-height (hash-ref grid neighbour))) (and neighbour-height (<= (- neighbour-height height) 1)))) neighbours)))
+(define (climbable height1 height2)
+  (<= (- height2 height1) 1))
 
-(define (reachable-backwards grid point)
+(define (reachable grid point rule)
   (let ((neighbours (neighbours point))
         (height (hash-ref grid point)))
-    (filter (lambda (neighbour) (let ((neighbour-height (hash-ref grid neighbour))) (and neighbour-height (<= (- height neighbour-height) 1)))) neighbours)))
+    (filter (lambda (neighbour) (let ((neighbour-height (hash-ref grid neighbour))) (and neighbour-height (rule height neighbour-height)))) neighbours)))
 
 (define (neighbours point)
   (list (point-+ point (make-point 1 0))
@@ -42,7 +40,7 @@
              (visited (make-hash-table)))
     (if
       (q-empty? queue)
-      10000
+      #f
       (let* ((item (q-pop! queue))
              (current (car item))
              (distance (cdr item)))
@@ -79,7 +77,7 @@
         (start (find-start grid-points))
         (end (find-end grid-points))
         (grid (alist->hash-table (map-cdr height grid-points)))
-        (next (lambda (current) (reachable grid current)))
+        (next (lambda (current) (reachable grid current climbable)))
         (done? (lambda (current) (equal? current end)))
         )
     (format #t "Start: ~s\n" start)
@@ -99,7 +97,7 @@
         (start (find-start grid-points))
         (end (find-end grid-points))
         (grid (alist->hash-table (map-cdr height grid-points)))
-        (next (lambda (current) (reachable-backwards grid current)))
+        (next (lambda (current) (reachable grid current (flip climbable))))
         (done? (lambda (current) (= (hash-ref grid current) (char->integer #\a))))
         )
     (search next done? end)))
