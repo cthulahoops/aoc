@@ -4,7 +4,6 @@
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
 
-
 (define (compare-numbers x y)
   (cond ((< x y) 'good)
         ((= x y) 'maybe)
@@ -32,7 +31,6 @@
 
 (define (part1)
   (let* ((pairs (chunk 2 (gather-list read eof-object?))))
-  ; (let* ((pairs (map (lambda (x) (map read x)) (read-blocks))))
     (index-sum (map (lambda (pair) (apply compare pair)) pairs))))
 
 (define magic-packets (list '((2)) '((6))))
