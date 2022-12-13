@@ -4,7 +4,7 @@
             apply-n-times make-counter counter-get counter-add counter->list enumerate
             range chunk iterate
             alist->hash-table
-            flip
+            flip partial
             make-point point-x point-y point? set-point-x set-point-y point-+))
 
 (use-modules (ice-9 rdelim))
@@ -109,3 +109,4 @@
     ))
 
 (define (flip f) (lambda (x y) (f y x)))
+(define (partial f . args1) (lambda args2 (apply f (append args1 args2))))
