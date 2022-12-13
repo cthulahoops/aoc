@@ -41,12 +41,6 @@
           (read-line) ; Discard line separating monkeys
           (cons (make-monkey id operation divisor next-true next-false) valuables)))))
 
-(define (alist->hash-table alist)
-  (let ((table (make-hash-table)))
-    (map (lambda (pair) (hash-set! table (car pair) (cdr pair))) alist)
-    table
-    ))
-
 (define (throw-to! table monkey valuable)
   (hash-set! table monkey (cons valuable (hash-ref table monkey))))
 

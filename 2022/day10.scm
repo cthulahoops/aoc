@@ -29,8 +29,6 @@
 
 (define (format-image lines) (string-append "\n" (string-join (map list->string lines) "\n") "\n"))
 
-(define (flip f) (lambda (x y) (f y x)))
-
 (define (part2)
   (pipe> (read-instructions)
          (iterate + 1)

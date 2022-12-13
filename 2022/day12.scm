@@ -36,25 +36,33 @@
                 (letter (char->integer letter))))
 
 (define (dijkstra next done? start)
-  (let loop ((queue (enq! (make-q) (cons start 0)))
+  (let loop ((queue (enq! (make-q) (cons start '())))
              (visited (make-hash-table)))
     (if
       (q-empty? queue)
       #f
       (let* ((item (q-pop! queue))
              (current (car item))
-             (distance (cdr item)))
+             (previous (cdr item)))
         (if
           (hash-ref visited current)
           (loop queue visited)
           (begin
-            (hash-set! visited current distance)
+            (hash-set! visited current previous)
             (if
               (done? current)
-              distance
+              (build-path visited start current)
               (begin
-                (map (lambda (item) (enq! queue (cons item (+ distance 1)))) (next current))
+                (map (lambda (next-point) (enq! queue (cons next-point current))) (next current))
                 (loop queue visited)))))))))
+
+(define (build-path visited start end)
+  (let loop ((current end) (path (list)))
+    (if
+      (or (equal? start current) (null? current))
+      (reverse path)
+      (loop (hash-ref visited current) (cons current path))
+    )))
 
 (define (find-start point-list) (find #\S point-list))
 (define (find-end point-list) (find #\E point-list))
@@ -79,7 +87,7 @@
         (grid (alist->hash-table (map-cdr height grid-points)))
         (next (lambda (current) (reachable grid current climbable)))
         (done? (lambda (current) (equal? current end)))
-        )
+        (path (dijkstra next done? start)))
     (format #t "Start: ~s\n" start)
     (format #t "End: ~s\n" end)
     (newline)
@@ -90,7 +98,7 @@
     ;   (display-lines)
     ;   (length)
     ;   )
-    (dijkstra next done? start)))
+    (length path)))
 
 (define (part2)
   (let* ((grid-points (read-grid))
@@ -99,5 +107,5 @@
         (grid (alist->hash-table (map-cdr height grid-points)))
         (next (lambda (current) (reachable grid current (flip climbable))))
         (done? (lambda (current) (= (hash-ref grid current) (char->integer #\a))))
-        )
-    (dijkstra next done? end)))
+        (path (dijkstra next done? end)))
+    (length path)))
