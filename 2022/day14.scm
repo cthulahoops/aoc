@@ -19,9 +19,10 @@
       (lambda (x) (equal? p2 x))
       (lambda (x) x)
       (lambda (x) (point+ x step))
-      p1)))
+      p1
+      (lambda (x) (list x)))))
 
-(define (expand-path path) (append (append-map expand-segment path (cdr path)) (list (last path))))
+(define (expand-path path) (append-map expand-segment path (cdr path)))
 
 (define (make-map rocks)
   (let ((map (make-hash-table)))
