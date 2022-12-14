@@ -39,12 +39,14 @@
       n
       (loop (+ n 1) (cdr items)))))
 
+(define (packet< x y) (equal? (compare x y) 'good))
+
 (define (part1)
   (let* ((pairs (chunk 2 (gather-list read eof-object?))))
-    (index-sum-where (partial equal? 'good) (map (partial apply compare) pairs))))
+    (index-sum-where identity (map (partial apply packet<) pairs))))
 
 (define (count-smaller-than special packets)
-  (length (filter (lambda (x) (equal? (compare x special) 'good)) packets)))
+  (length (filter (lambda (x) (packet< x special)) packets)))
 
 (define (part2)
   (let* ((packets (gather-list read eof-object?)))
