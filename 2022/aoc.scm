@@ -46,10 +46,7 @@
 (define (replicate n v) (if (= n 0) (list) (cons v (replicate (- n 1) v))))
 
 (define (enumerate items)
-  (let loop ((count 1) (items items) (result (list)))
-    (if (null? items)
-        (reverse result)
-        (loop (+ 1 count) (cdr items) (cons (cons count (car items)) result)))))
+  (map cons (range 1 (+ (length items) 1)) items))
 
 (define (chunk size items)
   (let loop ((items items) (result (list)))
@@ -88,12 +85,7 @@
     (length)))
 
 (define (range n m)
-  (let loop ((n n) (result (list)))
-    (if
-      (> n m)
-      (reverse result)
-      (loop (+ n 1) (cons n result)))))
-
+  (unfold (lambda (p) (= p m)) identity (lambda (x) (+ 1 x)) n))
 
 (define (sign value)
   (cond ((negative? value) -1)
