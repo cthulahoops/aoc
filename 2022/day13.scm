@@ -43,7 +43,7 @@
 
 (define (part1)
   (let* ((pairs (chunk 2 (gather-list read eof-object?))))
-    (index-sum-where identity (map (partial apply packet<) pairs))))
+    (index-sum-where (partial apply packet<) pairs)))
 
 (define (count-smaller-than special packets)
   (length (filter (lambda (x) (packet< x special)) packets)))
