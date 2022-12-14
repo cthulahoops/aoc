@@ -43,9 +43,9 @@
   (let* ((pairs (chunk 2 (gather-list read eof-object?))))
     (index-sum-where (partial equal? 'good) (map (partial apply compare) pairs))))
 
-(define magic-packets (list '((2)) '((6))))
+(define (count-smaller-than special packets)
+  (length (filter (lambda (x) (equal? (compare x special) 'good)) packets)))
+
 (define (part2)
-  (let* ((packets (gather-list read eof-object?))
-         (packets (append magic-packets packets))
-         (sorted (sort packets (lambda (x y) (equal? (compare x y) 'good)))))
-    (apply * (map (partial list-index sorted) magic-packets))))
+  (let* ((packets (gather-list read eof-object?)))
+    (* (+ (count-smaller-than 2 packets) 1) (+ (count-smaller-than 6 packets) 2))))
