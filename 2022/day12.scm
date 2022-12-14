@@ -22,10 +22,10 @@
     (filter (lambda (neighbour) (let ((neighbour-height (hash-ref grid neighbour))) (and neighbour-height (rule height neighbour-height)))) neighbours)))
 
 (define (neighbours point)
-  (list (point-+ point (make-point 1 0))
-        (point-+ point (make-point -1 0))
-        (point-+ point (make-point 0 1))
-        (point-+ point (make-point 0 -1))))
+  (list (point+ point (make-point 1 0))
+        (point+ point (make-point -1 0))
+        (point+ point (make-point 0 1))
+        (point+ point (make-point 0 -1))))
 
 (define (difference x y) (abs (- x y)))
 

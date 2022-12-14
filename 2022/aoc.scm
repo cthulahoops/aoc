@@ -5,7 +5,8 @@
             range chunk iterate
             alist->hash-table
             flip partial
-            make-point point-x point-y point? set-point-x set-point-y point-+))
+            sign
+            make-point point-x point-y point? set-point-x set-point-y point+ point- point-sign))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
@@ -94,13 +95,21 @@
       (loop (+ n 1) (cons n result)))))
 
 
+(define (sign value)
+  (cond ((negative? value) -1)
+        ((positive? value) 1)
+        (else value)))
+
 (define-immutable-record-type <point>
   (make-point x y)
   point?
   (x point-x set-point-x)
   (y point-y set-point-y))
 
-(define (point-+ p1 p2) (make-point (+ (point-x p1) (point-x p2)) (+ (point-y p1) (point-y p2))))
+
+(define (point+ p1 p2) (make-point (+ (point-x p1) (point-x p2)) (+ (point-y p1) (point-y p2))))
+(define (point- p1 p2) (make-point (- (point-x p1) (point-x p2)) (- (point-y p1) (point-y p2))))
+(define (point-sign p1) (make-point (sign (point-x p1)) (sign (point-y p1))))
 
 (define (alist->hash-table alist)
   (let ((table (make-hash-table)))

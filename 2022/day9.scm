@@ -23,8 +23,6 @@
   (knots rope-knots)
   (history rope-history))
 
-(define (point-+ p1 p2) (make-point (+ (point-x p1) (point-x p2)) (+ (point-y p1) (point-y p2))))
-
 (define (read-steps)
   (pipe>
     (read-lines)
@@ -40,17 +38,12 @@
                    ("L" (set-point-x point (- (point-x point) 1)))
                    ("R" (set-point-x point (+ (point-x point) 1)))))
 
-(define (sign value)
-  (cond ((negative? value) -1)
-        ((positive? value) 1)
-        (else value)))
-
 (define (step-towards head tail)
   (let* ((dx (- (point-x head) (point-x tail)))
          (dy (- (point-y head) (point-y tail)))
          (furthest (max (abs dx) (abs dy)))
          (step (if (<= furthest 1) (make-point 0 0) (make-point (sign dx) (sign dy)))))
-    (point-+ step tail)))
+    (point+ step tail)))
 
 (define (follow-head head knots)
   (if (null? knots)
