@@ -48,44 +48,34 @@
         (else point)
       ))))
 
-(define (run-simulation hash-table done?)
+(define (run-simulation hash-table start-point done? onfloor?)
   (let loop ((n 0))
-    (let ((resting-point (simulate-sand hash-table done? (const #f) (make-point 500 0))))
-      (if
-        resting-point
-        (begin
-          (hash-set! hash-table resting-point #\o)
-          (loop (+ n 1)))
-        n))))
+    (let ((resting-point (simulate-sand hash-table done? onfloor? start-point)))
+      (cond
+        ((not resting-point) n)
+        ((equal? resting-point start-point) (+ n 1))
+        (else
+          (begin
+            (hash-set! hash-table resting-point #\o)
+            (loop (+ n 1)))
+          )))))
 
 (define (part1)
   (let* ((paths (read-cave-system))
          (rocks (apply append (map expand-path paths)))
+         (start-point (make-point 500 0))
          (void (maximum (map point-y rocks)))
          (done? (lambda (point) (> (point-y point) void)))
          (hash-table (make-map rocks)))
-    (display void)
-    (newline)
-    (run-simulation hash-table done?)
+    (run-simulation hash-table start-point done? (const #f))
     ))
-
-(define (run-simulation-2 hash-table onfloor?)
-  (let loop ((n 0))
-    (let ((resting-point (simulate-sand hash-table (const #f) onfloor? (make-point 500 0))))
-      (if
-        (equal? resting-point (make-point 500 0))
-        (+ n 1)
-        (begin
-          (hash-set! hash-table resting-point #\o)
-          (loop (+ n 1)))
-        ))))
 
 (define (part2)
   (let* ((paths (read-cave-system))
          (rocks (apply append (map expand-path paths)))
+         (start-point (make-point 500 0))
          (floor (+ (maximum (map point-y rocks))))
          (onfloor? (lambda (point) (= (point-y point) (+ floor 1))))
          (hash-table (make-map rocks)))
-    (display floor)
-    (run-simulation-2 hash-table onfloor?)
+    (run-simulation hash-table start-point (const #f) onfloor?)
     ))
