@@ -36,12 +36,11 @@
 (define (down-left point) (point+ point (make-point -1 1)))
 (define (down-right point) (point+ point (make-point 1 1)))
 
-(define (simulate-sand hash-table done? onfloor? start)
+(define (simulate-sand hash-table done? done-result start)
   (let ((empty? (lambda (position) (not (hash-ref hash-table position)))))
     (let loop ((point start))
       (cond
-        ((done? point) #f)
-        ((onfloor? point) point)
+        ((done? point) (done-result point))
         ((empty? (down point)) (loop (down point)))
         ((empty? (down-left point)) (loop (down-left point)))
         ((empty? (down-right point)) (loop (down-right point)))
@@ -77,5 +76,5 @@
          (floor (+ (maximum (map point-y rocks))))
          (onfloor? (lambda (point) (= (point-y point) (+ floor 1))))
          (hash-table (make-map rocks)))
-    (run-simulation hash-table start-point (const #f) onfloor?)
+    (run-simulation hash-table start-point onfloor? identity)
     ))
