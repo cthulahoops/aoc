@@ -1,53 +1,43 @@
 (add-to-load-path ".")
 (use-modules (aoc))
 (use-modules (ice-9 match))
-(use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
 
 (define (compare-numbers x y)
-  (cond ((< x y) 'good)
-        ((= x y) 'maybe)
-        ((> x y) 'bad)))
+  (cond ((< x y) 'lt)
+        ((= x y) 'eq)
+        ((> x y) 'gt)))
 
 (define (compare x y)
-  ; (display (list x y))
-  ; (newline)
   (cond
     ((and (number? x) (number? y)) (compare-numbers x y))
     ((number? y) (compare x (list y)))
     ((number? x) (compare (list x) y))
     ((and (pair? x) (pair? y))
-        (match (compare (car x) (car y)) ('good 'good)
-                                         ('bad 'bad)
-                                         ('maybe (compare (cdr x) (cdr y)))))
-    ((and (null? x) (null? y)) 'maybe)
-    ((and (null? x) (pair? y)) 'good)
-    ((and (pair? x) (null? y)) 'bad)
-    ))
+        (match (compare (car x) (car y)) ('eq (compare (cdr x) (cdr y)))
+                                         (otherwise otherwise)))
+    ((and (null? x) (null? y)) 'eq)
+    ((and (null? x) (pair? y)) 'lt)
+    ((and (pair? x) (null? y)) 'gt)))
 
-(define (index-sum-where f items)
+(define (packet<  x y) (equal? (compare x y) 'lt))
+(define (packet<= x y) (not (packet> x y)))
+(define (packet=  x y) (equal? (compare x y) 'eq))
+(define (packet>= x y) (not (packet< x y)))
+(define (packet>  x y) (equal? (compare x y) 'gt))
+
+(define (indices-where f items)
   (pipe>
     (enumerate items)
     (filter (lambda (x) (f (cdr x))))
-    (map car)
-    (sum)))
-
-(define (list-index items x)
-  (let loop ((n 1) (items items))
-    (if
-      (equal? (car items) x)
-      n
-      (loop (+ n 1) (cdr items)))))
-
-(define (packet< x y) (equal? (compare x y) 'good))
+    (map car)))
 
 (define (part1)
   (let* ((pairs (chunk 2 (gather-list read eof-object?))))
-    (index-sum-where (partial apply packet<) pairs)))
+    (sum (indices-where (partial apply packet<) pairs))))
 
-(define (count-smaller-than special packets)
-  (length (filter (lambda (x) (packet< x special)) packets)))
+(define count-where (compose length filter))
 
 (define (part2)
-  (let* ((packets (gather-list read eof-object?)))
-    (* (+ (count-smaller-than 2 packets) 1) (+ (count-smaller-than 6 packets) 2))))
+  (let* ((packets (append (list '2 '6) (gather-list read eof-object?))))
+    (* (count-where (lambda (x) (packet<= x 2)) packets) (count-where (lambda (x) (packet<= x 6)) packets))))
