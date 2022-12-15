@@ -11,14 +11,14 @@
 (define (compare x y)
   (cond
     ((and (number? x) (number? y)) (compare-numbers x y))
+    ((and (null? x) (null? y)) 'eq)
+    ((and (null? x) y) 'lt)
+    ((and x (null? y)) 'gt)
     ((number? y) (compare x (list y)))
     ((number? x) (compare (list x) y))
     ((and (pair? x) (pair? y))
         (match (compare (car x) (car y)) ('eq (compare (cdr x) (cdr y)))
-                                         (otherwise otherwise)))
-    ((and (null? x) (null? y)) 'eq)
-    ((and (null? x) (pair? y)) 'lt)
-    ((and (pair? x) (null? y)) 'gt)))
+                                         (otherwise otherwise)))))
 
 (define (packet<  x y) (equal? (compare x y) 'lt))
 (define (packet<= x y) (not (packet> x y)))
