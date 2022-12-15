@@ -1,11 +1,5 @@
-(use-modules (srfi srfi-9))
+(add-to-load-path ".")
 (use-modules (aoc))
-
-(define-record-type <range>
-  (make-range start end)
-  range?
-  (start range-start)
-  (end range-end))
 
 (define (parse-range range)
   (pipe>
@@ -17,10 +11,6 @@
   (pipe>
     (string-split line #\,)
     (map parse-range)))
-
-(define (range-contains? a b) (and (<= (range-start a) (range-start b)) (<= (range-end b) (range-end a))))
-(define (range-before? a b) (< (range-end a) (range-start b)))
-(define (range-overlaps? a b) (not (or (range-before? a b) (range-before? b a))))
 
 (define (part1)
   (pipe>

@@ -36,8 +36,6 @@
   (let* ((pairs (chunk 2 (gather-list read eof-object?))))
     (sum (indices-where (partial apply packet<) pairs))))
 
-(define count-where (compose length filter))
-
 (define (part2)
   (let* ((packets (append (list '2 '6) (gather-list read eof-object?))))
     (* (count-where (lambda (x) (packet<= x 2)) packets) (count-where (lambda (x) (packet<= x 6)) packets))))

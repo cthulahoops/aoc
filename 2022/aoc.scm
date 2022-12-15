@@ -4,14 +4,16 @@
             apply-n-times make-counter counter-get counter-add counter->list enumerate
             range chunk iterate
             alist->hash-table
-            flip partial
+            flip partial count-where
             sign
-            make-point point-x point-y point? set-point-x set-point-y point+ point- point-sign))
+            make-point point-x point-y point? set-point-x set-point-y point+ point- point-sign
+            make-range range? range-start range-end range-overlaps? range-before? range-contains? range-length))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
 (use-modules (ice-9 vlist))
 (use-modules (srfi srfi-1))
+(use-modules (srfi srfi-9))
 (use-modules (srfi srfi-9 gnu))
 
 (define (gather-list get-next end?)
@@ -111,3 +113,16 @@
 
 (define (flip f) (lambda (x y) (f y x)))
 (define (partial f . args1) (lambda args2 (apply f (append args1 args2))))
+(define count-where (compose length filter))
+
+
+(define-record-type <range>
+  (make-range start end)
+  range?
+  (start range-start)
+  (end range-end))
+
+(define (range-contains? a b) (and (<= (range-start a) (range-start b)) (<= (range-end b) (range-end a))))
+(define (range-before? a b) (< (range-end a) (range-start b)))
+(define (range-overlaps? a b) (not (or (range-before? a b) (range-before? b a))))
+(define (range-length r) (+ 1 (- (range-end r) (range-start r))))
