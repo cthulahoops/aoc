@@ -25,26 +25,25 @@
 (define (merge-range-pair a b)
   (make-range (min (range-start a) (range-start b)) (max (range-end a) (range-end b))))
 
+(define (range-mergable? a b) (>= (+ (range-end a) 1) (range-start b)))
+
 (define (merge-ranges ranges)
   (let loop ((ranges ranges) (result (list)))
     (cond 
       ((null? (cdr ranges)) (reverse (cons (first ranges) result)))
-      ((range-overlaps? (first ranges) (second ranges))
+      ((range-mergable? (first ranges) (second ranges))
        (loop (cons (merge-range-pair (first ranges) (second ranges)) (cddr ranges)) result))
-      (else (loop (cdr ranges) (cons (first ranges) ranges)))
+      (else (loop (cdr ranges) (cons (first ranges) result)))
         )))
 
 (define (non-empty-range range) (>= (range-end range) (range-start range)))
 
 (define (part1)
-  (let* ((target-y 2000000)
+  (let* ((target-y 10)
          (sensor-report (read-input))
          (merged (covered-at sensor-report target-y))
          (beacon-count (count-unique (map (compose point-x cadr) (filter (lambda (pair) (= target-y (point-y (cadr pair)))) sensor-report))))
          )
-    (display beacon-count)
-    (display merged)
-    (newline)
     (- (sum (map range-length merged)) beacon-count)
     ))
 
@@ -55,7 +54,6 @@
 (define (part2)
   (let* (
          (sensor-report (read-input))
-         (merged covered-at sensor-report target-y)
          )
-    0
-    ))
+    (display-lines (filter (lambda (x) (> (length (cdr x)) 1)) (map (lambda (y) (cons y (covered-at sensor-report y))) (range 0 4000001))
+    ))))
