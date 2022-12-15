@@ -39,8 +39,9 @@
 (define (non-empty-range range) (>= (range-end range) (range-start range)))
 
 (define (part1)
-  (let* ((target-y 10)
+  (let* (
          (sensor-report (read-input))
+         (target-y (if (= (length sensor-report) 14) 10 2000000))
          (merged (covered-at sensor-report target-y))
          (beacon-count (count-unique (map (compose point-x cadr) (filter (lambda (pair) (= target-y (point-y (cadr pair)))) sensor-report))))
          )
@@ -51,9 +52,21 @@
   (let ((ranges (filter non-empty-range (map (lambda (pair) (impossible-range target-y (car pair) (cadr pair))) sensor-report))))
     (merge-ranges (sort ranges (lambda (x y) (< (range-start x) (range-start y)))))))
 
+(define (search-loop max-y sensor-report)
+  (let loop ((y 0))
+    (if (= 0 (modulo y 100000)) (begin (display y) (newline)))
+    (let ((cover (covered-at sensor-report y)))
+      (if (> (length cover) 1)
+          (cons y cover)
+          (if (< y max-y) (loop (+ y 1)))
+          ))))
+
 (define (part2)
   (let* (
          (sensor-report (read-input))
-         )
-    (display-lines (filter (lambda (x) (> (length (cdr x)) 1)) (map (lambda (y) (cons y (covered-at sensor-report y))) (range 0 4000001))
-    ))))
+         (max-y (if (= (length sensor-report) 14) 20 4000000))
+         (result (search-loop max-y sensor-report))
+         (distress-y (car result))
+         (distress-x (+ 1 (range-end (car (cdr result))))))
+      (+ (* 4000000 distress-x) distress-y)
+    ))

@@ -69,6 +69,22 @@
     (run-simulation hash-table start-point done? (const #f))
     ))
 
+(define (display-grid-line hash-table y x0 x1)
+  (display (list->string (map (lambda (x) (or (hash-ref hash-table (make-point x y)) #\space)) (range x0 (+ x1 1)))))
+  (newline))
+
+(define (display-grid rocks hash-table)
+  (let (
+         (x0 (minimum (map point-x rocks)))
+         (x1 (maximum (map point-x rocks)))
+         (y0 (minimum (map point-y rocks)))
+         (y1 (maximum (map point-y rocks)))
+        )
+    (display (list x0 x1 y0 y1))
+    (newline)
+    (newline)
+    (for-each (lambda (y) (display-grid-line hash-table y (- x0 10) (+ x1 10))) (range 0 (+ y1 3)))))
+
 (define (part2)
   (let* ((paths (read-cave-system))
          (rocks (apply append (map expand-path paths)))
@@ -76,5 +92,8 @@
          (floor (+ (maximum (map point-y rocks))))
          (onfloor? (lambda (point) (= (point-y point) (+ floor 1))))
          (hash-table (make-map rocks)))
+
+;   (display-grid-line hash-table 0)
     (run-simulation hash-table start-point onfloor? identity)
+    (display-grid rocks hash-table)
     ))
