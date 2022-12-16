@@ -15,5 +15,5 @@
       (input-suffix (if (null? (cddr args)) "" (caddr args)))
       (script (script day)))
     (load script)
-    (format #t "Part 1: ~a\n" (with-input day input-suffix part1))
-    (format #t "Part 2: ~a\n" (with-input day input-suffix part2))))
+    (format #t "Part 1: ~s\n" (with-input day input-suffix part1))
+    (format #t "Part 2: ~s\n" (with-input day input-suffix part2))))
