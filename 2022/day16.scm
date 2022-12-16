@@ -4,6 +4,7 @@
 (use-modules (srfi srfi-9))
 (use-modules (srfi srfi-9 gnu))
 (use-modules (ice-9 regex))
+(use-modules (ice-9 q))
 
 (define-record-type <valve>
   (make-valve id flow-rate tunnels)
@@ -75,26 +76,32 @@
 
 (define (step-time state) (set-state-time-left state (- (state-time-left state) 1)))
 
+(define (maximum-by f items) (car (sort items (lambda (x y) (> (f x) (f y))))))
+
 (define (released-pressure volcano state)
   (cond
-    ((= 0 (state-time-left state)) 0)
+    ((= 0 (state-time-left state)) (cons 0 '()))
+    ((and (hash-ref volcano (state-time-left state)) (< (state-flow-rate state) (hash-ref volcano (state-time-left state)))) (cons 0 '()))
    ; ((= 81 (state-flow-rate state)) (* (state-flow-rate state) (state-time-left state)))
-    ((= 201 (state-flow-rate state)) (* (state-flow-rate state) (state-time-left state)))
-    (else (+ (state-flow-rate state) (maximum (map (lambda (x) (released-pressure volcano x)) (map step-time (next-states* volcano state))))))))
+    ((= 201 (state-flow-rate state)) (cons (* (state-flow-rate state) (state-time-left state)) '()))
+    (else ((lambda (pair) (cons (+ (state-flow-rate state) (car pair)) (cons state (cdr pair)))) (maximum-by car (map (lambda (x) (released-pressure volcano x)) (map step-time (next-states* volcano state))))))))
 
 (define released-pressure (memo released-pressure))
 
-(define (part1)
-  (let* ((input (read-input))
-         (volcano (alist->hash-table (map (lambda (x) (cons (valve-id x) x)) input)))
-         )
-    (released-pressure volcano (make-state 30 (list "AA") (list) 0))))
+(define (part1) 0)
+  ; (let* ((input (read-input))
+  ;        (volcano (alist->hash-table (map (lambda (x) (cons (valve-id x) x)) input)))
+  ;        )
+  ;   (released-pressure volcano (make-state 30 (list "AA") (list) 0))))
 
 (define (part2)
   (let* ((input (read-input))
          (volcano (alist->hash-table (map (lambda (x) (cons (valve-id x) x)) input)))
          (best (sum (map valve-flow-rate input)))
+         (alone (released-pressure volcano (make-state 26 (list "AA") (list) 0)))
          )
     (display best)
     (newline)
-    (released-pressure volcano (make-state 26 (list "AA" "AA") (list) 0))))
+    (for-each (lambda (state) (hash-set! volcano (state-time-left state) (state-flow-rate state))) (cdr alone))
+    (car (released-pressure volcano (make-state 26 (list "AA" "AA") (list) 0)))
+    ))
