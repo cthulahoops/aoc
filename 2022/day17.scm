@@ -88,13 +88,8 @@
                        (cdr (circular-head circular))
                        (cons (car (circular-head circular)) (circular-tail circular)))))
 
-(define (part1)
-  (let* ((grid (make-hash-table))
-         (rock-count 2022)
-         (input (circular (string->list (read-line))))
-         ; (input (append input input input))
-         ; (input (string->list ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"))
-         )
+(define (simulate rock-count input)
+  (let* ((grid (make-hash-table)))
     (let loop ((input input) (i 0))
       (if
         (< i rock-count)
@@ -104,42 +99,38 @@
             ; (display (tower-height grid))
             ; (newline)
             (loop (drop-block! grid input (modulo i 5)) (1+ i)))
-        (display (circular-offset input))))
-   ;  (display-grid grid)
-    (newline)
+        ))
     (tower-height grid)
     ))
 
-; (define (part1) 0)
+(define (read-input) (circular (string->list (read-line))))
 
-(define (part2)
+(define (part1) (simulate 2022 (read-input)))
+
+(define (make-cycle end-step end-height start-step start-height)
+  (cons (- end-step start-step) (- end-height start-height)))
+(define (cycle-length cycle) (car cycle))
+(define (cycle-height cycle) (cdr cycle))
+
+(define (find-cycle input)
   (let* ((grid (make-hash-table))
-         (rock-count 200)
-         (input (circular (string->list (read-line))))
-         (visited (make-hash-table))
-         ; (input (append input input input))
-         ; (input (string->list ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"))
-         )
+         (visited (make-hash-table)))
     (let loop ((input input) (i 0))
-      (if
-        (< i rock-count)
-        (begin
-            ; (display i)
-            ; (display " ")
-            ; (display (tower-height grid))
-            ; (newline)
-            ; (if (hash-ref visited (list (circular-offset input) (modulo i 5)))
-            ;   (display (list i ": " (hash-ref visited (list (circular-offset input) (modulo i 5))) "\n"))
-            ;   (hash-set! visited (list (circular-offset input) (modulo i 5)) i))
-            (if (= (modulo (- i 98) 1400) 0) (begin (display (list i ": " (tower-height grid))) (newline)))
-            (loop (drop-block! grid input (modulo i 5)) (1+ i)))
-        (display (circular-offset input))))
-   ;  (display-grid grid)
-    (newline)
-    (tower-height grid)))
+        (if (and (> i 1730) ; There's an early cycle that doesn't work!
+                 (hash-ref visited (list (circular-offset input) (modulo i 5))))
+           (apply make-cycle (append (list i (tower-height grid)) (hash-ref visited (list (circular-offset input) (modulo i 5)))))
+           (begin (hash-set! visited (list (circular-offset input) (modulo i 5)) (list i (tower-height grid)))
+                  (loop (drop-block! grid input (modulo i 5)) (1+ i)))))))
+
+; Originally
 ; >>> (1_000_000_000_000 % 1700)
 ; 200
 ; >>> 318 + (1_000_000_000_000 // 1700) * 2623
 ; 1542941176480
-
-  ; (define (part2) 0)
+(define (part2)
+  (let* ((input (read-input))
+         (cycle (find-cycle input))
+         (rocks (modulo 1000000000000 (cycle-length cycle)))
+         (cycle-count (truncate (/ 1000000000000 (cycle-length cycle))))
+         (rocks-height (simulate rocks input)))
+    (+ rocks-height (* cycle-count (cycle-height cycle)))))
