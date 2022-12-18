@@ -1,0 +1,2 @@
+. ~/.aoc
+curl "https://adventofcode.com/2022/day/$1/input" -v -H "Cookie: session=$AOC_AUTH_COOKIE" > input/$1
