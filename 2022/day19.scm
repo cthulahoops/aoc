@@ -57,13 +57,18 @@
             (list (make-amount 0 0 0 1) (make-amount (match-number 6) 0 (match-number 7) 0))))))
 
 
+(define (discard materials) (make-amount (min (amount-ore materials) 8) (min (amount-clay materials) 25) (min (amount-obsidian materials) 25) (amount-geode materials)))
+(define (update-state state new-materials new-robots)
+  (make-state (- (state-time state) 1) (discard new-materials) new-robots))
+
 (define (run-action state max-ore-robots build cost)
-  (if (and (equal? build (make-amount 1 0 0 0)) (>= (amount-ore (state-robots state)) max-ore-robots))
+  (if (or (and (equal? build (make-amount 1 0 0 0)) (>= (amount-ore (state-robots state)) max-ore-robots))
+          (and (equal? build (make-amount 0 1 0 0)) (>= (amount-clay (state-robots state)) 10)))
       #f
     (let ((new-materials (amount- (state-materials state) cost)))
       (cond ((<= (state-time state) 0) state)
-            ((amount-negative? new-materials) (run-action (make-state (- (state-time state) 1) (amount+ (state-materials state) (state-robots state)) (state-robots state)) max-ore-robots build cost))
-            (else (make-state (- (state-time state) 1) (amount+ new-materials (state-robots state)) (amount+ (state-robots state) build)))))))
+            ((amount-negative? new-materials) (run-action (update-state state (amount+ (state-materials state) (state-robots state)) (state-robots state)) max-ore-robots build cost))
+            (else (update-state state (amount+ new-materials (state-robots state)) (amount+ (state-robots state) build)))))))
 
 (define (max-ore-robots actions) (maximum (cdr (map (compose amount-ore cadr) actions))))
 
@@ -97,5 +102,6 @@
          (init-state (make-state 32 (make-amount 0 0 0 0) (make-amount 1 0 0 0)))
          (geode-results (map (lambda (b) (display (blueprint-id b)) (newline) (cons (blueprint-id b) (most-geodes (blueprint-costs b) init-state))) blueprints))
         )
+    (display-lines geode-results)
     (apply * (map (compose amount-geode state-materials cdr) geode-results))
     ))

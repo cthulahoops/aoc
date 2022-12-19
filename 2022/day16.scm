@@ -76,8 +76,6 @@
 
 (define (step-time state) (set-state-time-left state (- (state-time-left state) 1)))
 
-(define (maximum-by f items) (car (sort items (lambda (x y) (> (f x) (f y))))))
-
 (define (released-pressure volcano state)
   (cond
     ((= 0 (state-time-left state)) (cons 0 '()))
