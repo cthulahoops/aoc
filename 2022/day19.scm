@@ -56,22 +56,19 @@
             (list (make-amount 0 0 1 0) (make-amount (match-number 4) (match-number 5) 0 0))
             (list (make-amount 0 0 0 1) (make-amount (match-number 6) 0 (match-number 7) 0))))))
 
-(define (run-action state build cost)
-  (if (and (equal? build (make-amount 1 0 0 0)) (>= (amount-ore (state-robots state)) 4))
+
+(define (run-action state max-ore-robots build cost)
+  (if (and (equal? build (make-amount 1 0 0 0)) (>= (amount-ore (state-robots state)) max-ore-robots))
       #f
     (let ((new-materials (amount- (state-materials state) cost)))
       (cond ((<= (state-time state) 0) state)
-            ((amount-negative? new-materials) (run-action (make-state (- (state-time state) 1) (amount+ (state-materials state) (state-robots state)) (state-robots state)) build cost))
+            ((amount-negative? new-materials) (run-action (make-state (- (state-time state) 1) (amount+ (state-materials state) (state-robots state)) (state-robots state)) max-ore-robots build cost))
             (else (make-state (- (state-time state) 1) (amount+ new-materials (state-robots state)) (amount+ (state-robots state) build)))))))
 
-(define (run-turn state build cost)
-  (let ((state-after-build (run-action state build cost)))
-    (if state-after-build
-        state-after-build
-        #f)))
+(define (max-ore-robots actions) (maximum (cdr (map (compose amount-ore cadr) actions))))
 
 (define (next-states blueprint-actions state)
-  (filter identity (map (lambda (purchase-cost) (apply (partial run-turn state) purchase-cost)) blueprint-actions)))
+  (filter identity (map (lambda (purchase-cost) (apply (partial run-action state (max-ore-robots blueprint-actions)) purchase-cost)) blueprint-actions)))
 
 (define (memo f)
   (let ((cache (make-hash-table)))
@@ -86,12 +83,6 @@
       )
 
 (define most-geodes (memo most-geodes))
-; (define (run-blueprint blueprint state)
-;   (set-state-materials state (amount+ (state-materials state) (state-robots state)))
-;   ; (pipe>
-;   ;   `state
-;   ;   )
-;   )
 
 (define (part1)
   (let* ((blueprints (map parse-blueprint (read-lines)))
@@ -100,4 +91,11 @@
         )
     (sum (map (lambda (pair) (* (car pair) (amount-geode (state-materials (cdr pair))))) geode-results))
     ))
-(define (part2) 0)
+
+(define (part2)
+  (let* ((blueprints (take (map parse-blueprint (read-lines)) 3))
+         (init-state (make-state 32 (make-amount 0 0 0 0) (make-amount 1 0 0 0)))
+         (geode-results (map (lambda (b) (display (blueprint-id b)) (newline) (cons (blueprint-id b) (most-geodes (blueprint-costs b) init-state))) blueprints))
+        )
+    (apply * (map (compose amount-geode state-materials cdr) geode-results))
+    ))
