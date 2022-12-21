@@ -52,9 +52,9 @@
 
 (define (chunk size items)
   (let loop ((items items) (result (list)))
-    (if (null? items)
-        (reverse result)
-        (loop (drop items size) (cons (take items size) result)))))
+    (cond ((null? items) (reverse result))
+          ((< (length items) size) (loop '() (cons items result)))
+          (else (loop (drop items size) (cons (take items size) result))))))
 
 (define (apply-n-times n f v)
   (let loop ((n n) (v v))

@@ -3,27 +3,28 @@
 (use-modules (ice-9 match))
 (use-modules (aoc))
 
-(define (parse-symbol symbol) (string->symbol symbol))
 (define (parse-expression parts)
-  (match (length parts) (2 (string->number (second parts)))
-                        (4 (list (string->symbol (third parts)) (string->symbol (second parts)) (string->symbol (fourth parts))))))
+  (match parts ((_space x) (string->number x))
+               ((_space a op b) (list (string->symbol op) (string->symbol a) (string->symbol b)))))
 
 (define (parse-line line)
-  (let ((split (string-split line #\:)))
-    (list (parse-symbol (first split)) (parse-expression (string-split (second split) #\space)))))
+  (match (string-split line #\:)
+         ((name expr) (list (string->symbol name) (parse-expression (string-split expr #\space))))))
 
 (define (define-expressions definitions)
-  (let ((env (make-hash-table))) (for-each (lambda (x) (hash-set! env (first x) (second x))) definitions) env))
+  (let ((env (make-hash-table)))
+    (for-each (lambda (x) (hash-set! env (first x) (second x))) definitions)
+    env))
 
 (define (eval-call operator arg1 arg2)
   (cond ((and (number? arg1) (number? arg2)) (eval-simple operator arg1 arg2))
         (else (list operator arg1 arg2))))
 
 (define (resolve symbol env)
-  (let ((expr (hash-ref env symbol)))
-    (cond ((equal? expr #f) symbol)
-          ((number? expr) expr)
-          ((pair? expr) (eval-call (first expr) (resolve (second expr) env) (resolve (third expr) env))))))
+  (match (hash-ref env symbol)
+    (#f symbol)
+    ((? number? x) x)
+    ((op a b) (eval-call op (resolve a env) (resolve b env)))))
 
 (define (flip-op op)
   (match op ('/ '*)
