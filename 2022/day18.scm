@@ -49,13 +49,10 @@
          (q (make-q))
          (make-water! (lambda (item) (hash-set! water item #t) (enq! q item))))
     (make-water! start)
-    (let loop ()
-      (if (q-empty? q)
-        water
-        (begin
-          (let ((current (deq! q)))
-            (for-each make-water! (filter (partial fillable? water scan) (neighbours current))))
-            (loop))))))
+    (while (not (q-empty? q))
+      (let ((current (deq! q)))
+        (for-each make-water! (filter (partial fillable? water scan) (neighbours current)))))
+    water))
 
 (define (part1)
   (let* ((input (read-input))
