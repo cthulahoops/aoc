@@ -16,7 +16,7 @@
   (let ((env (make-hash-table))) (for-each (lambda (x) (hash-set! env (first x) (second x))) definitions) env))
 
 (define (eval-call operator arg1 arg2)
-  (cond ((and (number? arg1) (number? arg2)) (eval (list operator arg1 arg2) (interaction-environment)))
+  (cond ((and (number? arg1) (number? arg2)) (eval-simple operator arg1 arg2))
         (else (list operator arg1 arg2))))
 
 (define (resolve symbol env)
@@ -31,17 +31,26 @@
             ('- '+)
             ('+ '-)))
 
+(define (op x)
+  (match x ('/ /)
+           ('* *)
+           ('+ +)
+           ('- -)))
+
+
+(define (eval-simple symbol arg1 arg2) ((op symbol) arg1 arg2))
+
 (define (balance left right)
-  (display left)
-  (display '=)
-  (display right)
-  (newline)
+  ; (display left)
+  ; (display '=)
+  ; (display right)
+  ; (newline)
   (cond ((number? left) (balance right left))
         ((symbol? left) (list left right))
         ((and (equal? '/ (first left)) (number? (second left))) (balance (third left) (/ (second left) right)))
         ((and (equal? '- (first left)) (number? (second left))) (balance (third left) (- (second left) right)))
-        ((number? (second left)) (balance (third left) (eval (list (flip-op (first left)) right (second left)) (interaction-environment))))
-        ((number? (third left)) (balance (second left) (eval (list (flip-op (first left)) right (third left)) (interaction-environment))))))
+        ((number? (second left)) (balance (third left) (eval-simple (flip-op (first left)) right (second left))))
+        ((number? (third left)) (balance (second left) (eval-simple (flip-op (first left)) right (third left))))))
 
 (define (part1)
   (let* ((env (define-expressions (map parse-line (read-lines)))))
@@ -51,7 +60,4 @@
   (let* ((env (define-expressions (map parse-line (read-lines)))))
     (hash-remove! env 'humn)
     (let ((root (hash-ref env 'root))) (hash-set! env 'root (cons '= (cdr root))))
-    (apply balance (cdr (resolve 'root env)))))
-; (define (part2)
-;   (display-lines (map parse-line (read-lines)))
-;   0)
+    (second (apply balance (cdr (resolve 'root env))))))
