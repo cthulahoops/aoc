@@ -12,10 +12,6 @@
   (let ((split (string-split line #\:)))
     (list (parse-symbol (first split)) (parse-expression (string-split (second split) #\space)))))
 
-(define (transpile lines)
-  (append (map parse-line lines) (list '(display (root)) '(newline))))
-
-; (try-eval)
 (define (define-expressions definitions)
   (let ((env (make-hash-table))) (for-each (lambda (x) (hash-set! env (first x) (second x))) definitions) env))
 
