@@ -1,6 +1,6 @@
 (define-module (aoc)
   #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists
-            minimum maximum replicate display-lines character->number count-unique
+            minimum minimum-by maximum maximum-by replicate display-lines character->number count-unique
             apply-n-times make-counter counter-get counter-add counter->list enumerate
             range chunk iterate
             alist->hash-table
@@ -43,8 +43,20 @@
 
 ;; (define (zip-lists args) (apply map-in-order (cons list (map string->list args))))
 (define (zip-lists args) (apply map-in-order (cons list args)))
-(define (minimum items) (car (sort items <)))
-(define (maximum items) (car (sort items >)))
+(define (minimum items) (apply min items))
+(define (maximum items) (apply max items))
+(define (maximum-by f items) (extreme-by > f items))
+(define (minimum-by f items) (extreme-by < f items))
+
+(define (extreme-by compare f items)
+  (let loop ((best (car items)) (best-value (f (car items))) (rest (cdr items)))
+    (if (null? rest)
+        best
+        (let ((new-best (f (car rest))))
+          (if (compare new-best best-value)
+              (loop (car rest) new-best (cdr rest))
+              (loop best best-value (cdr rest)))))))
+
 (define (replicate n v) (if (= n 0) (list) (cons v (replicate (- n 1) v))))
 
 (define (enumerate items)
