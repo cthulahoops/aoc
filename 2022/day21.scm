@@ -1,11 +1,10 @@
 (add-to-load-path ".")
-(use-modules (srfi srfi-1))
 (use-modules (ice-9 match))
 (use-modules (aoc))
 
-(define (parse-expression parts)
-  (match parts ((_space x) (string->number x))
-               ((_space a op b) (list (string->symbol op) (string->symbol a) (string->symbol b)))))
+(define parse-expression
+  (match-lambda ((_space x) (string->number x))
+                ((_space a op b) (list (string->symbol op) (string->symbol a) (string->symbol b)))))
 
 (define (parse-line line)
   (match (string-split line #\:)
@@ -13,7 +12,7 @@
 
 (define (define-expressions definitions)
   (let ((env (make-hash-table)))
-    (for-each (lambda (x) (hash-set! env (first x) (second x))) definitions)
+    (for-each (match-lambda ((name expr) (hash-set! env name expr))) definitions)
     env))
 
 (define (eval-call operator arg1 arg2)
@@ -26,18 +25,8 @@
     ((? number? x) x)
     ((op a b) (eval-call op (resolve a env) (resolve b env)))))
 
-(define (flip-op op)
-  (match op ('/ '*)
-            ('* '/)
-            ('- '+)
-            ('+ '-)))
-
-(define (op x)
-  (match x ('/ /)
-           ('* *)
-           ('+ +)
-           ('- -)))
-
+(define inverse-op (match-lambda ('/ '*) ('* '/) ('- '+) ('+ '-)))
+(define op (match-lambda ('/ /) ('* *) ('+ +) ('- -)))
 
 (define (eval-simple symbol arg1 arg2) ((op symbol) arg1 arg2))
 
@@ -46,8 +35,8 @@
               ((? symbol? _) (list left right))
               (('/ (? number? a) b) (balance b (/ a right)))
               (('- (? number? a) b) (balance b (- a right)))
-              ((op (? number? a) b) (balance b (eval-simple (flip-op op) right a)))
-              ((op a (? number? b)) (balance a (eval-simple (flip-op op) right b)))
+              ((op (? number? a) b) (balance b (eval-simple (inverse-op op) right a)))
+              ((op a (? number? b)) (balance a (eval-simple (inverse-op op) right b)))
               ))
 
 (define (part1)
@@ -58,4 +47,4 @@
   (let* ((env (define-expressions (map parse-line (read-lines)))))
     (hash-remove! env 'humn)
     (let ((root (hash-ref env 'root))) (hash-set! env 'root (cons '= (cdr root))))
-    (second (apply balance (cdr (resolve 'root env))))))
+    (cadr (apply balance (cdr (resolve 'root env))))))
