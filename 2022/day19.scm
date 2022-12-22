@@ -21,15 +21,15 @@
   (geode amount-geode)
   )
 
-(define (amount+ a1 a2) (make-amount (+ (amount-ore a1) (amount-ore a2))
-                                     (+ (amount-clay a1) (amount-clay a2))
-                                     (+ (amount-obsidian a1) (amount-obsidian a2))
-                                     (+ (amount-geode a1) (amount-geode a2))))
+(define (map-amount f . amounts)
+  (make-amount
+    (apply f (map amount-ore amounts))
+    (apply f (map amount-clay amounts))
+    (apply f (map amount-obsidian amounts))
+    (apply f (map amount-geode amounts))))
 
-(define (amount- a1 a2) (make-amount (- (amount-ore a1) (amount-ore a2))
-                                     (- (amount-clay a1) (amount-clay a2))
-                                     (- (amount-obsidian a1) (amount-obsidian a2))
-                                     (- (amount-geode a1) (amount-geode a2))))
+(define (amount+ a1 a2) (map-amount + a1 a2))
+(define (amount- a1 a2) (map-amount - a1 a2))
 
 (define (amount-negative? a) (or (< (amount-ore a) 0) (< (amount-clay a) 0) (< (amount-obsidian a) 0) (< (amount-geode a) 0)))
 
