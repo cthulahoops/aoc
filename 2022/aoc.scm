@@ -6,7 +6,7 @@
             alist->hash-table
             flip partial count-where
             sign
-            make-point point-x point-y point? set-point-x set-point-y point+ point- point-sign
+            <point> make-point point-x point-y point? set-point-x set-point-y point+ point- point-sign
             make-range range? range-start range-end range-overlaps? range-before? range-contains? range-length))
 
 (use-modules (ice-9 rdelim))
