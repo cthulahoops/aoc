@@ -1,6 +1,7 @@
 (add-to-load-path ".")
 (use-modules (srfi srfi-1))
 (use-modules (ice-9 match))
+(use-modules (grid))
 (use-modules (aoc))
 
 (define (hash-items hash) (hash-map->list cons hash))
@@ -106,15 +107,16 @@
         )
     (for-each (lambda (y) (display-grid-line hash-table y (min 1 x0) x1)) (range (min 1 y0) (1+ y1)))))
 
+(define (read-board) (read-grid (lambda (x) (equal? x #\#))))
+
 (define (part1)
-  (let* ((elves (parse-board (read-block))))
-;    (display-grid elves)
+  (let* ((elves (read-board)))
     (run-simulation 10 elves init-priorities)
     (- (box-size elves) (length (hash-keys elves)))
     ))
 
 (define (part2)
-  (let* ((elves (parse-board (read-block))))
-;    (display-grid elves)
+  (let* ((elves (read-board)))
+    (display-grid elves)
     (run-simulation 1000 elves init-priorities)
     ))
