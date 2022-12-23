@@ -3,6 +3,7 @@
 (use-modules (srfi srfi-9))
 (use-modules (ice-9 match))
 (use-modules (aoc))
+(use-modules (grid))
 
 (define-record-type <position>
   (make-position location facing)
@@ -19,16 +20,7 @@
   (let* ((digits (take-while char-numeric? input)))
     (list (string->number (list->string digits)) (drop input (length digits)))))
 
-
-(define (parse-board-line grid) 
-  (match-lambda ((y . line)
-     (map (match-lambda ((x . #\space) x)
-                        ((x . c) (hash-set! grid (make-point x y) c))) (enumerate (string->list line))))))
-
-(define (parse-board board)
-  (let ((grid (make-hash-table)))
-    (map (parse-board-line grid) (enumerate board))
-    grid))
+(define (read-board) (read-grid (match-lambda (#\space #f) (c c))))
 
 (define (min-x grid y)
   (let loop ((x 1))
@@ -111,7 +103,7 @@
 
 (define (part1)
   (let* (
-        (grid (parse-board (read-block)))
+        (grid (read-board))
         (bounds (compute-bounds grid))
         (instructions (parse-instructions (car (read-block))))
         (position (make-position (make-point (min-x grid 1) 1) 0))
@@ -157,14 +149,6 @@
            (next-start (car next))
            (next-vec (cdr next)))
       (cons (map (partial list (turn-right vec)) first-edge) (follow-boundary grid next-start next-vec (- n 1))))))
-    
-; (define (generate-boundary-mapping grid corner)
-;   (let* ((vec (corner-vec grid corner))
-;          (v1 (make-point 0 (point-y vec)))
-;          (v2 (make-point (point-x vec) 0)))
-;     (map-in-order cons (follow-boundary grid corner v1) (follow-boundary grid corner v2))))
-
-
 
 (define (assemble boundary)
   (pipe>
@@ -186,7 +170,7 @@
 
 (define (part2)
   (let* (
-        (grid (parse-board (read-block)))
+        (grid (read-board))
         (instructions (parse-instructions (car (read-block))))
         (start-position (make-position (make-point (min-x grid 1) 1) 0))
         (boundary (assemble (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
