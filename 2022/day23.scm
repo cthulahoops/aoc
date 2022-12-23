@@ -76,14 +76,11 @@
 (define (new-priorities priorities) (append (cdr priorities) (list (car priorities))))
 
 (define (run-simulation max-rounds elves priorities)
-  (let loop ((n 0) (priorities priorities))
-    (display (list n))
-    (newline)
-    (if (and (< n max-rounds) (> (update-elf-positions! elves priorities) 0))
-      (begin
-;        (display-grid elves)
-        (loop (1+ n) (new-priorities priorities)))
-      (1+ n))))
+  (do
+    ((n 1 (1+ n)) (priorities priorities (new-priorities priorities)))
+    ((or (> n max-rounds) (= 0 (update-elf-positions! elves priorities))) n)
+    n
+  ))
 
 (define (box-size hash-table)
   (let* (
