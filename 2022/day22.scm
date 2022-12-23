@@ -78,7 +78,7 @@
 
 (define (ahead-of bounds position)
   (match (hash-ref bounds position) (#f (make-position (point+ (position-location position) (step-direction (position-facing position))) (position-facing position)))
-                                    ((? position? wrap-position) (display (list 'wrapped wrap-position)) (newline) wrap-position)))
+                                    ((? position? wrap-position) wrap-position)))
 
 (define step-direction
   (match-lambda (0 (make-point 1 0))
@@ -119,13 +119,6 @@
         )
     (password final)
     ))
-(define (part1) 0)
-
-; (define (corner-vec grid corner)
-;   (find (lambda (v) (not (hash-ref grid (point+ corner v)))) (list (make-point 1 1) (make-point 1 -1) (make-point -1 -1) (make-point -1 1))))
-
-; (define corners
-;   (list (make-point 9 5) (make-point 9 8) (make-point 12 9)))
 
 (define (iterate-n f init count)
   (if (= 0 count)
@@ -179,21 +172,16 @@
     (map cdr)
     (chunk 2)
     (append-map (lambda (parts) (map list (first parts) (reverse (second parts)))))
-    (display-lines)
     )
   )
 
 (define (point-back point) (make-point (- (point-x point)) (- (point-y point))))
 
 (define (create-boundary boundary)
-  (display-lines boundary)
-  (newline)
   (let* ((bounds (make-hash-table))
          (add-bound! (lambda (p1 v1 p2 v2) (hash-set! bounds (make-position p1 (vec-to-facing v1)) (make-position p2 (vec-to-facing v2))))))
     (map (match-lambda (((v1 p1) (v2 p2)) (add-bound! p1 (point-back v1) p2 v2)
                                           (add-bound! p2 (point-back v2) p1 v1))) boundary)
-    (display-lines (hash-keys bounds))
-    (newline)
     bounds))
 
 (define (part2)
@@ -203,15 +191,7 @@
         (start-position (make-position (make-point (min-x grid 1) 1) 0))
         (boundary (assemble (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
         (bounds (create-boundary boundary))
-        (final (fold (lambda (instruction position) (display (list position instruction)) (newline) (apply-instruction grid bounds position instruction)) start-position instructions))
+        (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))
         )
-    (display final)
-    (newline)
-    (display start-position)
     (password final)
-    ; (pipe> 
-    ;   bond
-    ;   )
-    ; (newline)
-    ;0 
     ))
