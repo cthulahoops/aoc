@@ -44,14 +44,14 @@
 (define (a-star start-time start-point end-point next-states cost-estimate)
   (let* ((init-queue (make-psq point-order <))
          (init-queue (psq-set init-queue (cons start-point start-time) (cost-estimate start-point end-point))))
-    (let loop ((n 0) (queue init-queue))
+    (let loop ((queue init-queue))
       (receive (next next-queue) (psq-pop queue)
         (match next ((point . t)
          ; (display (list point t (psq-ref queue (cons point t)))) (newline)
           (if
             (equal? point end-point)
             t
-            (loop (1+ n) (fold (lambda (next q) (psq-set q (cons next (1+ t)) (+ 1 t (cost-estimate next end-point)))) next-queue (next-states point (1+ t))))
+            (loop (fold (lambda (next q) (psq-set q (cons next (1+ t)) (+ 1 t (cost-estimate next end-point)))) next-queue (next-states point (1+ t))))
             )
         ))))))
 
