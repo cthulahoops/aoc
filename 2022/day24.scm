@@ -37,13 +37,7 @@
     (do
       ((t 0 (1+ t)) (blizzards blizzards (update-blizzards bounds blizzards)))
       ((> t count))
-      ; (display (list t blizzards))
-      ; (newline)
-      ; (clear-blizzards! grid)
-      ; (add-blizzards! grid blizzards)
-      ; (display-grid identity grid)
       (for-each (lambda (b) (hash-set! blizzard-history (cons t (car b)) #t)) blizzards)
-      ; (newline)
     )
     blizzard-history))
 
@@ -74,15 +68,17 @@
         (cons p (grid-neighbours p)))))
     )
 
-; This is very annoying!
+; This is slightly less annoying than it was!
 (define (point-order p1 p2)
-  (cond ((< (point-x (car p1)) (point-x (car p2))) #t)
-        ((> (point-x (car p1)) (point-x (car p2))) #f)
-        (else (cond ((< (point-y (car p1)) (point-y (car p2))) #t)
-                    ((> (point-y (car p1)) (point-y (car p2))) #f)
-                    (else (< (cdr p1) (cdr p2)))))))
+  (pair< (list (point-x (car p1)) (point-y (car p1)) (cdr p1))
+         (list (point-x (car p2)) (point-y (car p2)) (cdr p2))))
 
-
+(define (pair< x y)
+  (cond ((null? y) #f)
+        ((null? x) #t)
+        ((< (car x) (car y)) #t)
+        ((> (car x) (car y)) #f)
+        (else (pair< (cdr x) (cdr y)))))
 
 (define (extract-blizzards grid)
   (filter identity (map point-to-blizzard (grid-items grid))))
@@ -98,12 +94,6 @@
         (else point)))
 
 (define (blizzard? c) (or (equal? c #\v) (equal? c #\<) (equal? c #\>) (equal? c #\^)))
-
-(define (clear-blizzards! grid)
-  (for-each (lambda (kv) (if (blizzard? (cdr kv)) (hash-set! grid (car kv) #\.))) (grid-items grid)))
-
-(define (add-blizzards! grid blizzards)
-  (for-each (lambda (kv) (hash-set! grid (car kv) (to-blizzard-symbol (cdr kv)))) blizzards))
 
 (define (to-blizzard-symbol v)
   (match v (($ <point> 1 0) #\>)
@@ -126,5 +116,4 @@
 
 (define (start-point grid) (first-empty grid 1))
 (define (end-point grid) (first-empty grid (maximum (map point-y (grid-keys grid)))))
-
 (define (first-empty grid row) (caar (filter (lambda (p) (and (equal? (point-y (car p)) row) (equal? (cdr p) #\.))) (grid-items grid))))
