@@ -109,6 +109,7 @@
         (position (make-position (make-point (min-x grid 1) 1) 0))
         (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) position instructions))
         )
+    (display-grid (lambda (x) (or x #\space)) grid)
     (password final)
     ))
 
@@ -135,11 +136,11 @@
 ; (define assembley-plan (list 5 4 1 2 2 3 3 1 4 5 6 6 7 7))
 ; (define cube-size 50)
 ; EXAMPLE
-; (define assembley-plan (list 1 2 3 3 2 4 5 6 6 5 4 1 7 7))
-; (define cube-size 4)
+(define assembley-plan (list 1 2 3 3 2 4 5 6 6 5 4 1 7 7))
+(define cube-size 4)
 ; REAL
-(define assembley-plan (list 1 2 3 4 4 3 5 5 2 1 6 7 7 6))
-(define cube-size 50)
+; (define assembley-plan (list 1 2 3 4 4 3 5 5 2 1 6 7 7 6))
+; (define cube-size 50)
 
 (define (follow-boundary grid start vec n)
   (if (= n 0)

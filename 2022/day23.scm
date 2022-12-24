@@ -93,20 +93,6 @@
         )
     (* (1+ (- x1 x0)) (1+ (- y1 y0)))))
 
-(define (display-grid-line hash-table y x0 x1)
-  (display (list->string (map (lambda (x) (if (hash-ref hash-table (make-point x y)) #\# #\.)) (range x0 (1+ x1)))))
-  (newline))
-
-(define (display-grid hash-table)
-  (let* (
-         (elves (hash-keys hash-table))
-         (x0 (minimum (map point-x elves)))
-         (x1 (maximum (map point-x elves)))
-         (y0 (minimum (map point-y elves)))
-         (y1 (maximum (map point-y elves)))
-        )
-    (for-each (lambda (y) (display-grid-line hash-table y (min 1 x0) x1)) (range (min 1 y0) (1+ y1)))))
-
 (define (read-board) (read-grid (lambda (x) (equal? x #\#))))
 
 (define (part1)
@@ -117,6 +103,6 @@
 
 (define (part2)
   (let* ((elves (read-board)))
-    (display-grid elves)
+    (display-grid (lambda (x) (if x #\# #\.)) elves)
     (run-simulation 1000 elves init-priorities)
     ))
