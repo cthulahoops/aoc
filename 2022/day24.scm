@@ -9,41 +9,36 @@
 (define (part1)
   (let* (
     (grid (read-board))
-    (bounds (grid-bounds grid))
-    (blizzards (extract-blizzards grid))
-    (blizzard-history (create-blizzard-history bounds blizzards)))
+    (next (next-points grid)))
 
-  (display bounds)
-  (newline)
   (display (start-point grid))
   (newline)
   (display (end-point grid))
   (newline)
+  (display-grid identity grid)
   (clear-blizzards! grid)
-  (a-star 0 (start-point grid) (end-point grid) (next-points grid blizzard-history) manhatten-distance)
+  (a-star 0 (start-point grid) (end-point grid) next manhatten-distance)
  ))
 
 (define (part2)
   (let* (
     (grid (read-board))
-    (bounds (grid-bounds grid))
-    (blizzards (extract-blizzards grid))
-    (blizzard-history (create-blizzard-history bounds blizzards)))
+    (next (next-points grid))
+    )
 
   (clear-blizzards! grid)
   (let*
-    ((t1 (a-star 0 (start-point grid) (end-point grid) (next-points grid blizzard-history) manhatten-distance))
-     (t2 (a-star t1 (end-point grid) (start-point grid) (next-points grid blizzard-history) manhatten-distance))
-     (t3 (a-star t2 (start-point grid) (end-point grid) (next-points grid blizzard-history) manhatten-distance))
+    ((t1 (a-star 0 (start-point grid) (end-point grid) next manhatten-distance))
+     (t2 (a-star t1 (end-point grid) (start-point grid) next manhatten-distance))
+     (t3 (a-star t2 (start-point grid) (end-point grid) next manhatten-distance))
      ) t3)
  ))
-;(define (part2) 0)
 
-(define (create-blizzard-history bounds blizzards)
+(define (create-blizzard-history bounds count blizzards)
   (let ((blizzard-history (make-hash-table)))
     (do
       ((t 0 (1+ t)) (blizzards blizzards (update-blizzards bounds blizzards)))
-      ((> t 1000))
+      ((> t count))
       ; (display (list t blizzards))
       ; (newline)
       ; (clear-blizzards! grid)
@@ -62,17 +57,24 @@
         (match next ((point . t)
          ; (display (list point t (psq-ref queue (cons point t)))) (newline)
           (if
-            (or (> t 1000) (equal? point end-point))
+            (equal? point end-point)
             t
             (loop (1+ n) (fold (lambda (next q) (psq-set q (cons next (1+ t)) (+ 1 t (cost-estimate next end-point)))) next-queue (next-states point (1+ t))))
             )
         ))))))
 
-(define (next-points grid blizzards)
-  (lambda (p t)
-    (filter
-      (lambda (p) (and (equal? (hash-ref grid p) #\.) (not (hash-ref blizzards (cons t p)))))
-      (cons p (grid-neighbours p)))))
+(define (next-points grid)
+  (let* (
+    (bounds (grid-bounds grid))
+    (blizzards (extract-blizzards grid))
+    (cycle-length (lcm (- (grid-max-x bounds) 2) (- (grid-max-y bounds) 2)))
+    (blizzards (create-blizzard-history bounds cycle-length blizzards)))
+
+    (lambda (p t)
+      (filter
+        (lambda (p) (and (equal? (hash-ref grid p) #\.) (not (hash-ref blizzards (cons (modulo t cycle-length) p)))))
+        (cons p (grid-neighbours p)))))
+    )
 
 ; This is very annoying!
 (define (point-order p1 p2)
