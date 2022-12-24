@@ -11,7 +11,7 @@
     (grid (read-board))
     (bounds (grid-bounds grid))
     (blizzards (extract-blizzards grid))
-    (blizzard-history (make-hash-table)))
+    (blizzard-history (create-blizzard-history bounds blizzards)))
 
   (display bounds)
   (newline)
@@ -20,37 +20,49 @@
   (display (end-point grid))
   (newline)
   (clear-blizzards! grid)
-
-  (do
-    ((t 0 (1+ t)) (blizzards blizzards (update-blizzards bounds blizzards)))
-    ((> t 500))
-    ; (display (list t blizzards))
-    ; (newline)
-    ; (clear-blizzards! grid)
-    ; (add-blizzards! grid blizzards)
-    ; (display-grid identity grid)
-    (for-each (lambda (b) (hash-set! blizzard-history (cons t (car b)) #t)) blizzards)
-    ; (newline)
-  )
-
- ; (display (grid-keys blizzard-history))
-; (newline)
- ; (newline)
-
-   (a-star (start-point grid) (end-point grid) (next-points grid blizzard-history) manhatten-distance)
+  (a-star 0 (start-point grid) (end-point grid) (next-points grid blizzard-history) manhatten-distance)
  ))
 
-(define (part2) 0)
+(define (part2)
+  (let* (
+    (grid (read-board))
+    (bounds (grid-bounds grid))
+    (blizzards (extract-blizzards grid))
+    (blizzard-history (create-blizzard-history bounds blizzards)))
 
-(define (a-star start-point end-point next-states cost-estimate)
+  (clear-blizzards! grid)
+  (let*
+    ((t1 (a-star 0 (start-point grid) (end-point grid) (next-points grid blizzard-history) manhatten-distance))
+     (t2 (a-star t1 (end-point grid) (start-point grid) (next-points grid blizzard-history) manhatten-distance))
+     (t3 (a-star t2 (start-point grid) (end-point grid) (next-points grid blizzard-history) manhatten-distance))
+     ) t3)
+ ))
+;(define (part2) 0)
+
+(define (create-blizzard-history bounds blizzards)
+  (let ((blizzard-history (make-hash-table)))
+    (do
+      ((t 0 (1+ t)) (blizzards blizzards (update-blizzards bounds blizzards)))
+      ((> t 1000))
+      ; (display (list t blizzards))
+      ; (newline)
+      ; (clear-blizzards! grid)
+      ; (add-blizzards! grid blizzards)
+      ; (display-grid identity grid)
+      (for-each (lambda (b) (hash-set! blizzard-history (cons t (car b)) #t)) blizzards)
+      ; (newline)
+    )
+    blizzard-history))
+
+(define (a-star start-time start-point end-point next-states cost-estimate)
   (let* ((init-queue (make-psq point-order <))
-         (init-queue (psq-set init-queue (cons start-point 0) (cost-estimate start-point end-point))))
+         (init-queue (psq-set init-queue (cons start-point start-time) (cost-estimate start-point end-point))))
     (let loop ((n 0) (queue init-queue))
       (receive (next next-queue) (psq-pop queue)
         (match next ((point . t)
          ; (display (list point t (psq-ref queue (cons point t)))) (newline)
           (if
-            (or (> t 300) (equal? point end-point))
+            (or (> t 1000) (equal? point end-point))
             t
             (loop (1+ n) (fold (lambda (next q) (psq-set q (cons next (1+ t)) (+ 1 t (cost-estimate next end-point)))) next-queue (next-states point (1+ t))))
             )
