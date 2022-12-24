@@ -16,7 +16,6 @@
   (display (end-point grid))
   (newline)
   (display-grid identity grid)
-  (clear-blizzards! grid)
   (a-star 0 (start-point grid) (end-point grid) next manhatten-distance)
  ))
 
@@ -26,7 +25,6 @@
     (next (next-points grid))
     )
 
-  (clear-blizzards! grid)
   (let*
     ((t1 (a-star 0 (start-point grid) (end-point grid) next manhatten-distance))
      (t2 (a-star t1 (end-point grid) (start-point grid) next manhatten-distance))
@@ -72,7 +70,7 @@
 
     (lambda (p t)
       (filter
-        (lambda (p) (and (equal? (hash-ref grid p) #\.) (not (hash-ref blizzards (cons (modulo t cycle-length) p)))))
+        (lambda (p) (and (hash-ref grid p) (not (equal? (hash-ref grid p) #\#)) (not (hash-ref blizzards (cons (modulo t cycle-length) p)))))
         (cons p (grid-neighbours p)))))
     )
 
