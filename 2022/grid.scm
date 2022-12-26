@@ -1,5 +1,5 @@
 (define-module (grid)
-               #:export (read-grid display-grid grid-neighbours manhatten-distance grid-items grid-keys
+               #:export (read-grid display-grid display-grid* grid-neighbours manhatten-distance grid-items grid-keys
                          grid-bounds grid-min-x grid-max-x grid-min-y grid-max-y))
 
 (use-modules (srfi srfi-9))
@@ -17,6 +17,20 @@
     grid))
 
 (define (read-grid f) (parse-grid f (read-block)))
+
+(define (display-grid* f hash-table)
+  (let* (
+         (points (grid-keys hash-table))
+         (x0 (minimum (map point-x points)))
+         (x1 (maximum (map point-x points)))
+         (y0 (minimum (map point-y points)))
+         (y1 (maximum (map point-y points)))
+         (display-line 
+           (lambda (y x0 x1)
+              (display (list->string (map (lambda (x) (f (make-point x y) (hash-ref hash-table (make-point x y)))) (range x0 (1+ x1)))))
+              (newline)))
+        )
+    (for-each (lambda (y) (display-line y (min 1 x0) x1)) (range (min 1 y0) (1+ y1)))))
 
 (define (display-grid f hash-table)
   (let* (

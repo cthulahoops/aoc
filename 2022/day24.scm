@@ -9,6 +9,7 @@
 (define (part1)
   (let* (
     (grid (read-board))
+    (blizzard? (create-blizzard grid))
     (next (next-points grid)))
 
   (display (start-point grid))
@@ -16,7 +17,22 @@
   (display (end-point grid))
   (newline)
   (display-grid identity grid)
-  (a-star 0 (start-point grid) (end-point grid) next manhatten-distance)
+  (receive (count history) (a-star 0 (start-point grid) (end-point grid) next manhatten-distance)
+      (for-each (match-lambda (
+          (t . point) (display "\u001b[2J")
+                      (display (list t point))
+                      (newline)
+                      (newline)
+                      (display-grid* (match-lambda*
+                          ((k #\#) #\⬜)
+                          (((? (lambda (x) (equal? point x)) p) v) #\🧝)
+                          (((? (lambda (x) (blizzard? x t)) p) v) #\🎈)
+                          ((k v) #\⬛)
+                          ) grid)
+                      (newline)
+                      (usleep 200000)
+                      )) history)
+      )
  ))
 
 (define (part2)
@@ -43,17 +59,25 @@
 
 (define (a-star start-time start-point end-point next-states cost-estimate)
   (let* ((init-queue (make-psq point-order <))
-         (init-queue (psq-set init-queue (cons start-point start-time) (cost-estimate start-point end-point))))
+         (init-queue (psq-set init-queue (list start-point start-time '()) (cost-estimate start-point end-point))))
     (let loop ((queue init-queue))
       (receive (next next-queue) (psq-pop queue)
-        (match next ((point . t)
+        (match next ((point t history)
          ; (display (list point t (psq-ref queue (cons point t)))) (newline)
           (if
             (equal? point end-point)
-            t
-            (loop (fold (lambda (next q) (psq-set q (cons next (1+ t)) (+ 1 t (cost-estimate next end-point)))) next-queue (next-states point (1+ t))))
+            (values t (reverse history))
+            (loop (fold (lambda (next q) (psq-set q (list next (1+ t) (cons (cons t point) history)) (+ 1 t (cost-estimate next end-point)))) next-queue (next-states point (1+ t))))
             )
         ))))))
+
+(define (create-blizzard grid)
+  (let* (
+    (bounds (grid-bounds grid))
+    (blizzards (extract-blizzards grid))
+    (cycle-length (lcm (- (grid-max-x bounds) 2) (- (grid-max-y bounds) 2)))
+    (blizzards (create-blizzard-history bounds cycle-length blizzards)))
+  (lambda (p t) (hash-ref blizzards (cons (modulo t cycle-length) p)))))
 
 (define (next-points grid)
   (let* (
@@ -70,8 +94,8 @@
 
 ; This is slightly less annoying than it was!
 (define (point-order p1 p2)
-  (pair< (list (point-x (car p1)) (point-y (car p1)) (cdr p1))
-         (list (point-x (car p2)) (point-y (car p2)) (cdr p2))))
+  (pair< (list (point-x (first p1)) (point-y (first p1)) (second p1))
+         (list (point-x (first p2)) (point-y (first p2)) (second p2))))
 
 (define (pair< x y)
   (cond ((null? y) #f)
