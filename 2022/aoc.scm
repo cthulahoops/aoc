@@ -6,7 +6,8 @@
             alist->hash-table
             flip partial count-where
             sign
-            <point> make-point point-x point-y point? set-point-x set-point-y point+ point- point-sign
+            <point> make-point point? point-x point-y set-point-x set-point-y point+ point- point-sign
+            <point3> make-point3 point3? point3-x point3-y point3-z set-point3-x set-point3-y set-point3-z point3+
             make-range range? range-start range-end range-overlaps? range-before? range-contains? range-length))
 
 (use-modules (ice-9 rdelim))
@@ -144,3 +145,12 @@
 (define (range-before? a b) (< (range-end a) (range-start b)))
 (define (range-overlaps? a b) (not (or (range-before? a b) (range-before? b a))))
 (define (range-length r) (+ 1 (- (range-end r) (range-start r))))
+
+(define-immutable-record-type <point3>
+  (make-point3 x y z)
+  point3?
+  (x point3-x set-point3-x)
+  (y point3-y set-point3-y)
+  (z point3-z set-point3-z))
+
+(define (point3+ p1 p2) (make-point3 (+ (point3-x p1) (point3-x p2)) (+ (point3-y p1) (point3-y p2)) (+ (point3-z p1) (point3-z p2))))
