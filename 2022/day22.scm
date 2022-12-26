@@ -66,31 +66,29 @@
          (#f (make-position (point+ (position-location position) (step-direction (position-facing position))) (position-facing position)))
          ((? position? wrap-position) wrap-position)))
 
-(define step-direction
-  (match-lambda (0 (make-point 1 0))
-                (1 (make-point 0 1))
-                (2 (make-point -1 0))
-                (3 (make-point 0 -1))))
+(define-match step-direction
+  (0 (make-point 1 0))
+  (1 (make-point 0 1))
+  (2 (make-point -1 0))
+  (3 (make-point 0 -1)))
 
-(define vec-to-facing
-  (match-lambda (($ <point> 1 0) 0)
-                (($ <point> 0 1) 1)
-                (($ <point> -1 0) 2)
-                (($ <point> 0 -1) 3)))
+(define-match vec-to-facing
+  (($ <point> 1 0) 0)
+  (($ <point> 0 1) 1)
+  (($ <point> -1 0) 2)
+  (($ <point> 0 -1) 3))
 
 (define (step grid bounds position)
-; (display (list 'step position (ahead-of bounds position)))
- ; (newline)
   (let ((next (ahead-of bounds position)))
     (match (hash-ref grid (position-location next)) (#\. next)
                                                     (#\# position))))
 
 (define (turn position count) (make-position (position-location position) (modulo (+ (position-facing position) count) 4)))
-(define apply-instruction
-  (match-lambda* ((grid bounds position #\L) (turn position -1))
-                 ((grid bounds position #\R) (turn position 1))
-                 ((grid bounds position 0) position)
-                 ((grid bounds position (? number? step-count)) (apply-instruction grid bounds (step grid bounds position) (- step-count 1)))))
+(define-match* apply-instruction
+   ((grid bounds position #\L) (turn position -1))
+   ((grid bounds position #\R) (turn position 1))
+   ((grid bounds position 0) position)
+   ((grid bounds position (? number? step-count)) (apply-instruction grid bounds (step grid bounds position) (- step-count 1))))
 
 (define (password position)
   (+ (* 1000 (point-y (position-location position))) (* 4 (point-x (position-location position))) (position-facing position)))

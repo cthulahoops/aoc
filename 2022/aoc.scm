@@ -1,5 +1,5 @@
 (define-module (aoc)
-  #:export (gather-list read-lines sum pipe> read-blocks read-block zip-lists
+  #:export (gather-list read-lines sum pipe> define-match define-match* read-blocks read-block zip-lists
             minimum minimum-by maximum maximum-by replicate display-lines character->number count-unique
             apply-n-times make-counter counter-get counter-add counter->list enumerate
             range chunk iterate
@@ -38,6 +38,12 @@
        (rest-of-pipeline (cdr pipeline)))
       `(pipe> ,(append next-item (list value)) . ,rest-of-pipeline)))
       )
+
+(define-macro (define-match* name . clauses)
+    `(define ,name (match-lambda* . ,clauses)))
+
+(define-macro (define-match name . clauses)
+    `(define ,name (match-lambda . ,clauses)))
 
 (define (character->number c) (string->number (list->string (list c))))
 
