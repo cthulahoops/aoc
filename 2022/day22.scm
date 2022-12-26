@@ -11,6 +11,39 @@
   (location position-location)
   (facing position-facing))
 
+; (define assembley-plan (list 5 4 1 2 2 3 3 1 4 5 6 6 7 7))
+; (define cube-size 50)
+; EXAMPLE
+(define assembley-plan-2d (list 1 2 3 4 5 4 1 5 6 7 3 7 6 2))
+(define assembley-plan (list 1 2 3 3 2 4 5 6 6 5 4 1 7 7))
+(define cube-size 4)
+; REAL
+; (define assembley-plan (list 1 2 3 4 4 3 5 5 2 1 6 7 7 6))
+; (define cube-size 50)
+
+(define (part1)
+  (let* [(grid (read-board))
+         (instructions (parse-instructions (car (read-block))))
+         (start-position (make-position (make-point (min-x grid 1) 1) 0))
+         (boundary (assemble assembley-plan-2d (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
+         (bounds (create-boundary boundary))
+         (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))
+         ]
+    (display-grid (lambda (x) (or x #\space)) grid)
+    (password final)
+    ))
+
+(define (part2)
+  (let* [(grid (read-board))
+         (instructions (parse-instructions (car (read-block))))
+         (start-position (make-position (make-point (min-x grid 1) 1) 0))
+         (boundary (assemble assembley-plan (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
+         (bounds (create-boundary boundary))
+         (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))
+         ]
+    (password final)
+    ))
+
 (define (parse-instructions input)
   (let loop ((input (string->list input)) (result (list)))
     (match (split-number input) ((step-count (turn . rest)) (loop rest (cons turn (cons step-count result))))
@@ -28,49 +61,10 @@
         x
         (loop (+ x 1)))))
 
-(define (max-x grid y x0)
-  (let loop ((x x0))
-    (if (hash-ref grid (make-point x y))
-        (loop (+ x 1))
-        (- x 1))))
-
-(define (min-y grid x)
-  (let loop ((y 1))
-    (if (hash-ref grid (make-point x y))
-        y
-        (loop (+ y 1)))))
-
-(define (max-y grid x y0)
-  (let loop ((y y0))
-    (if (hash-ref grid (make-point x y))
-        (loop (+ y 1))
-        (- y 1))))
-
-(define (hash-keys hash) (hash-map->list (lambda (k v) k) hash))
-
-(define (compute-bounds grid)
-  (let* ((bounds (make-hash-table))
-         (grid-max-y (maximum (map point-y (hash-keys grid))))
-         (grid-max-x (maximum (map point-x (hash-keys grid))))
-         (add-bound! (lambda (p1 p2 vec) (hash-set! bounds (make-position p1 (vec-to-facing vec)) (make-position p2 (vec-to-facing vec))))))
-    (do ((y 1 (1+ y)))
-        ((> y grid-max-y))
-        (let* ((x0 (min-x grid y)) (x1 (max-x grid y x0)))
-          (add-bound! (make-point x0 y) (make-point x1 y) (make-point -1 0))
-          (add-bound! (make-point x1 y) (make-point x0 y) (make-point 1 0))
-        ))
-    (do ((x 1 (1+ x)))
-        ((> x grid-max-x))
-        (let* ((y0 (min-y grid x)) (y1 (max-y grid x y0)))
-          (add-bound! (make-point x y0) (make-point x y1) (make-point 0 -1))
-          (add-bound! (make-point x y1) (make-point x y0) (make-point 0 1))
-        ))
-    bounds
-    ))
-
 (define (ahead-of bounds position)
-  (match (hash-ref bounds position) (#f (make-position (point+ (position-location position) (step-direction (position-facing position))) (position-facing position)))
-                                    ((? position? wrap-position) wrap-position)))
+  (match (hash-ref bounds position)
+         (#f (make-position (point+ (position-location position) (step-direction (position-facing position))) (position-facing position)))
+         ((? position? wrap-position) wrap-position)))
 
 (define step-direction
   (match-lambda (0 (make-point 1 0))
@@ -101,18 +95,6 @@
 (define (password position)
   (+ (* 1000 (point-y (position-location position))) (* 4 (point-x (position-location position))) (position-facing position)))
 
-(define (part1)
-  (let* (
-        (grid (read-board))
-        (bounds (compute-bounds grid))
-        (instructions (parse-instructions (car (read-block))))
-        (position (make-position (make-point (min-x grid 1) 1) 0))
-        (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) position instructions))
-        )
-    (display-grid (lambda (x) (or x #\space)) grid)
-    (password final)
-    ))
-
 (define (iterate-n f init count)
   (if (= 0 count)
       '()
@@ -133,14 +115,6 @@
       ((hash-ref grid ahead) (cons ahead vec))
       ((hash-ref grid outside-right) (cons point right)))))
 
-; (define assembley-plan (list 5 4 1 2 2 3 3 1 4 5 6 6 7 7))
-; (define cube-size 50)
-; EXAMPLE
-(define assembley-plan (list 1 2 3 3 2 4 5 6 6 5 4 1 7 7))
-(define cube-size 4)
-; REAL
-; (define assembley-plan (list 1 2 3 4 4 3 5 5 2 1 6 7 7 6))
-; (define cube-size 50)
 
 (define (follow-boundary grid start vec n)
   (if (= n 0)
@@ -151,9 +125,9 @@
            (next-vec (cdr next)))
       (cons (map (partial list (turn-right vec)) first-edge) (follow-boundary grid next-start next-vec (- n 1))))))
 
-(define (assemble boundary)
+(define (assemble plan boundary)
   (pipe>
-    (sort (map cons assembley-plan boundary) (lambda (x y) (< (car x) (car y))))
+    (sort (map cons plan boundary) (lambda (x y) (< (car x) (car y))))
     (map cdr)
     (chunk 2)
     (append-map (lambda (parts) (map list (first parts) (reverse (second parts)))))
@@ -168,15 +142,3 @@
     (map (match-lambda (((v1 p1) (v2 p2)) (add-bound! p1 (point-back v1) p2 v2)
                                           (add-bound! p2 (point-back v2) p1 v1))) boundary)
     bounds))
-
-(define (part2)
-  (let* (
-        (grid (read-board))
-        (instructions (parse-instructions (car (read-block))))
-        (start-position (make-position (make-point (min-x grid 1) 1) 0))
-        (boundary (assemble (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
-        (bounds (create-boundary boundary))
-        (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))
-        )
-    (password final)
-    ))
