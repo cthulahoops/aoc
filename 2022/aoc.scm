@@ -7,12 +7,14 @@
             flip partial count-where
             sign
             <point> make-point point? point-x point-y set-point-x set-point-y point+ point- point-sign
-            <point3> make-point3 point3? point3-x point3-y point3-z set-point3-x set-point3-y set-point3-z point3+
+            <point3> make-point3 point3? point3-x point3-y point3-z set-point3-x set-point3-y set-point3-z point3+ point3-
+            point->point3
             make-range range? range-start range-end range-overlaps? range-before? range-contains? range-length))
 
 (use-modules (ice-9 rdelim))
 (use-modules (ice-9 textual-ports))
 (use-modules (ice-9 vlist))
+(use-modules (ice-9 match))
 (use-modules (srfi srfi-1))
 (use-modules (srfi srfi-9))
 (use-modules (srfi srfi-9 gnu))
@@ -154,3 +156,6 @@
   (z point3-z set-point3-z))
 
 (define (point3+ p1 p2) (make-point3 (+ (point3-x p1) (point3-x p2)) (+ (point3-y p1) (point3-y p2)) (+ (point3-z p1) (point3-z p2))))
+(define (point3- p1 p2) (make-point3 (- (point3-x p1) (point3-x p2)) (- (point3-y p1) (point3-y p2)) (- (point3-z p1) (point3-z p2))))
+
+(define-match point->point3 (($ <point> x y) (make-point3 x y 0)))

@@ -2,6 +2,8 @@
 (use-modules (srfi srfi-1))
 (use-modules (srfi srfi-9))
 (use-modules (ice-9 match))
+(use-modules (ice-9 q))
+(use-modules (ice-9 receive))
 (use-modules (aoc))
 (use-modules (grid))
 
@@ -16,7 +18,7 @@
 ; EXAMPLE
 (define assembley-plan-2d (list 1 2 3 4 5 4 1 5 6 7 3 7 6 2))
 (define assembley-plan (list 1 2 3 3 2 4 5 6 6 5 4 1 7 7))
-(define cube-size 4)
+(define (cube-size grid) (sqrt (/ (hash-count (lambda (k v) #t) grid) 6)))
 ; REAL
 ; (define assembley-plan (list 1 2 3 4 4 3 5 5 2 1 6 7 7 6))
 ; (define cube-size 50)
@@ -33,16 +35,47 @@
     (password final)
     ))
 
+(define (part1) 0)
+
 (define (part2)
   (let* [(grid (read-board))
          (instructions (parse-instructions (car (read-block))))
          (start-position (make-position (make-point (min-x grid 1) 1) 0))
-         (boundary (assemble assembley-plan (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
-         (bounds (create-boundary boundary))
-         (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))
+         (3d-map (fold-cube (cube-size grid) (lambda (p) (hash-ref grid p)) (position-location start-position)))
+         ; (boundary (assemble assembley-plan (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
+         ; (bounds (create-boundary boundary))
+         ; (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))
          ]
-    (password final)
+    ; (password final)
+    (display-grid (lambda (x) (or x #\space)) grid)
+    (length (grid-keys 3d-map))
     ))
+
+
+(define (fold-cube cube-size on-cube? start-position)
+  (visit-all (next-states cube-size on-cube?) (list start-position (make-point3 0 0 0) (make-point3 0 1 0) (make-point3 1 0 0))))
+
+(define-match (next-states cube-size on-cube?)
+              [(position position-3d down right)
+               (filter (compose on-cube? car)
+                       (list (list (point+ position (make-point cube-size 0)) (point3+ position-3d right) down (cross-product down right))
+                             (list (point- position (make-point cube-size 0)) (point3- position-3d (cross-product right down)) down (cross-product right down))
+                             (list (point+ position (make-point 0 cube-size)) (point3+ position-3d down) (cross-product down right) right)
+                             (list (point- position (make-point 0 cube-size)) (point3- position-3d (cross-product right down)) (cross-product right down) right)))])
+
+(define (visit-all next-states start-state)
+  (let [(queue (enq! (make-q) start-state))
+        (faces (make-hash-table))]
+    (while
+      (not (q-empty? queue))
+      (let [(state (q-pop! queue))]
+        (if (hash-ref faces state) (continue))
+        (hash-set! faces state #t)
+        (display (list 'state state))
+        (newline)
+        (for-each (lambda (state) (enq! queue state)) (next-states state))
+      ))
+    faces))
 
 (define (parse-instructions input)
   (let loop ((input (string->list input)) (result (list)))
@@ -140,3 +173,7 @@
     (map (match-lambda (((v1 p1) (v2 p2)) (add-bound! p1 (point-back v1) p2 v2)
                                           (add-bound! p2 (point-back v2) p1 v1))) boundary)
     bounds))
+
+
+(define-match* cross-product
+  ((($ <point3> x1 y1 z1) ($ <point3> x2 y2 z2)) (make-point3 (- (* y1 z2) (* y2 z1)) (- (* z1 x2) (* z2 x1)) (- (* x1 y2) (* x2 y1)))))
