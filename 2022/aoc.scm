@@ -7,8 +7,8 @@
             flip partial count-where
             sign
             <point> make-point point? point-x point-y set-point-x set-point-y point+ point- point-sign
-            <point3> make-point3 point3? point3-x point3-y point3-z set-point3-x set-point3-y set-point3-z point3+ point3-
-            point->point3
+            <point3> make-point3 point3? point3-x point3-y point3-z set-point3-x set-point3-y set-point3-z point3+ point3- point3*
+            cross-product point->point3
             make-range range? range-start range-end range-overlaps? range-before? range-contains? range-length))
 
 (use-modules (ice-9 rdelim))
@@ -155,7 +155,9 @@
   (y point3-y set-point3-y)
   (z point3-z set-point3-z))
 
-(define (point3+ p1 p2) (make-point3 (+ (point3-x p1) (point3-x p2)) (+ (point3-y p1) (point3-y p2)) (+ (point3-z p1) (point3-z p2))))
+(define (point3+ . points) (make-point3 (apply + (map point3-x points)) (apply + (map point3-y points)) (apply + (map point3-z points))))
 (define (point3- p1 p2) (make-point3 (- (point3-x p1) (point3-x p2)) (- (point3-y p1) (point3-y p2)) (- (point3-z p1) (point3-z p2))))
-
+(define (point3* c p2) (make-point3 (* c (point3-x p2)) (* c (point3-y p2)) (* c (point3-z p2))))
+(define-match* cross-product
+  ((($ <point3> x1 y1 z1) ($ <point3> x2 y2 z2)) (make-point3 (- (* y1 z2) (* y2 z1)) (- (* z1 x2) (* z2 x1)) (- (* x1 y2) (* x2 y1)))))
 (define-match point->point3 (($ <point> x y) (make-point3 x y 0)))

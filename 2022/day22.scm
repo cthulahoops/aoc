@@ -3,7 +3,6 @@
 (use-modules (srfi srfi-9))
 (use-modules (ice-9 match))
 (use-modules (ice-9 q))
-(use-modules (ice-9 receive))
 (use-modules (aoc))
 (use-modules (grid))
 
@@ -13,55 +12,80 @@
   (location position-location)
   (facing position-facing))
 
-; (define assembley-plan (list 5 4 1 2 2 3 3 1 4 5 6 6 7 7))
-; (define cube-size 50)
-; EXAMPLE
-(define assembley-plan-2d (list 1 2 3 4 5 4 1 5 6 7 3 7 6 2))
-(define assembley-plan (list 1 2 3 3 2 4 5 6 6 5 4 1 7 7))
-(define (cube-size grid) (sqrt (/ (hash-count (lambda (k v) #t) grid) 6)))
-; REAL
-; (define assembley-plan (list 1 2 3 4 4 3 5 5 2 1 6 7 7 6))
-; (define cube-size 50)
-
 (define (part1)
   (let* [(grid (read-board))
          (instructions (parse-instructions (car (read-block))))
-         (start-position (make-position (make-point (min-x grid 1) 1) 0))
-         (boundary (assemble assembley-plan-2d (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
-         (bounds (create-boundary boundary))
-         (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))
-         ]
-    (display-grid (lambda (x) (or x #\space)) grid)
-    (password final)
+         (start-position (make-position (make-point (min-x grid 1) 1) 0))]
+    (follow-instructions grid instructions start-position wrap-around-edges)
     ))
-
-(define (part1) 0)
 
 (define (part2)
   (let* [(grid (read-board))
          (instructions (parse-instructions (car (read-block))))
          (start-position (make-position (make-point (min-x grid 1) 1) 0))
-         (3d-map (fold-cube (cube-size grid) (lambda (p) (hash-ref grid p)) (position-location start-position)))
-         ; (boundary (assemble assembley-plan (follow-boundary grid (position-location start-position) (make-point 1 0) 14)))
-         ; (bounds (create-boundary boundary))
-         ; (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))
          ]
-    ; (password final)
-    (display-grid (lambda (x) (or x #\space)) grid)
-    (length (grid-keys 3d-map))
+    (follow-instructions grid instructions start-position (segments-match-in-3d grid start-position))
     ))
 
+(define (follow-instructions grid instructions start-position matching-function)
+  (let* [(boundary-segments (follow-boundary grid (position-location start-position) (make-point 1 0) 14))
+         (boundary (assemble matching-function boundary-segments))
+         (bounds (create-boundary boundary))
+         (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))]
+    (password final)))
+
+
+(define (segments-match-in-3d grid start-position)
+  (let* [(cube-size (cube-size grid))
+         (folding-plan (fold-cube cube-size (lambda (p) (hash-ref grid p)) (position-location start-position)))]
+  (lambda (a b)
+    (equal?
+      (map (partial plan-point-to-point3 cube-size folding-plan) (segment-ends a))
+      (reverse (map (partial plan-point-to-point3 cube-size folding-plan) (segment-ends b)))))))
+
+(define (wrap-around-edges a b)
+  (let [(a (segment-ends a))
+        (b (reverse (segment-ends b)))]
+    (or (and (vertical? a) (vertical? b) (same-height? a b))
+        (and (horizontal? a) (horizontal? b) (same-column? a b)))))
+
+(define (vertical? segment) (= (point-x (first segment)) (point-x (second segment))))
+(define (horizontal? segment) (= (point-y (first segment)) (point-y (second segment))))
+(define (same-height? segment1 segment2) (= (point-y (first segment1)) (point-y (first segment2))))
+(define (same-column? segment1 segment2) (= (point-x (first segment1)) (point-x (first segment2))))
+
+(define (pair-by f items)
+  (if (null? items)
+    '()
+    (let [(pair (find (lambda (b) (f (car items) b)) (cdr items)))]
+        (cons (list (car items) pair) (pair-by f (delete pair (cdr items)))))))
 
 (define (fold-cube cube-size on-cube? start-position)
-  (visit-all (next-states cube-size on-cube?) (list start-position (make-point3 0 0 0) (make-point3 0 1 0) (make-point3 1 0 0))))
+  (visit-all (next-states cube-size on-cube?) (list start-position (make-point3 0 0 0) (make-point3 1 0 0) (make-point3 0 1 0))))
 
 (define-match (next-states cube-size on-cube?)
-              [(position position-3d down right)
-               (filter (compose on-cube? car)
-                       (list (list (point+ position (make-point cube-size 0)) (point3+ position-3d right) down (cross-product down right))
-                             (list (point- position (make-point cube-size 0)) (point3- position-3d (cross-product right down)) down (cross-product right down))
-                             (list (point+ position (make-point 0 cube-size)) (point3+ position-3d down) (cross-product down right) right)
-                             (list (point- position (make-point 0 cube-size)) (point3- position-3d (cross-product right down)) (cross-product right down) right)))])
+              [(position position-3d right down)
+               (let [(back (cross-product down right))
+                     (forward (cross-product right down))]
+                 (filter (compose on-cube? car)
+                         (list (list (point+ position (make-point cube-size 0)) (point3+ position-3d right) back down)
+                               (list (point- position (make-point cube-size 0)) (point3+ position-3d back) forward down)
+                               (list (point+ position (make-point 0 cube-size)) (point3+ position-3d down) right back)
+                               (list (point- position (make-point 0 cube-size)) (point3+ position-3d back) right forward))))])
+
+
+(define (segment-ends segment) (map second (list (first segment) (last segment))))
+
+(define (plan-point-to-point3 cube-size folding-plan point)
+  (let* [(offset (point-face-offset cube-size point))
+         (face-top-left (point- point offset))
+         (y (point-y offset))
+         (x (point-x offset))]
+    (match (hash-ref folding-plan face-top-left)
+           ((position-3d right down) (point3+ (point3* (- cube-size 1) position-3d) (point3* x right) (point3* y down))))))
+
+(define-match* point-face-offset
+              [(cube-size ($ <point> x y)) (make-point (floor-remainder (- x 1) cube-size) (floor-remainder (- y 1) cube-size))])
 
 (define (visit-all next-states start-state)
   (let [(queue (enq! (make-q) start-state))
@@ -69,10 +93,8 @@
     (while
       (not (q-empty? queue))
       (let [(state (q-pop! queue))]
-        (if (hash-ref faces state) (continue))
-        (hash-set! faces state #t)
-        (display (list 'state state))
-        (newline)
+        (if (hash-ref faces (car state)) (continue))
+        (hash-set! faces (car state) (cdr state))
         (for-each (lambda (state) (enq! queue state)) (next-states state))
       ))
     faces))
@@ -89,10 +111,7 @@
 (define (read-board) (read-grid (match-lambda (#\space #f) (c c))))
 
 (define (min-x grid y)
-  (let loop ((x 1))
-    (if (hash-ref grid (make-point x y))
-        x
-        (loop (+ x 1)))))
+  (minimum (map point-x (filter (lambda (p) (= y (point-y p))) (grid-keys grid)))))
 
 (define (ahead-of bounds position)
   (match (hash-ref bounds position)
@@ -126,44 +145,37 @@
 (define (password position)
   (+ (* 1000 (point-y (position-location position))) (* 4 (point-x (position-location position))) (position-facing position)))
 
-(define (iterate-n f init count)
-  (if (= 0 count)
-      '()
-      (cons init (iterate-n f (f init) (1- count)))))
+(define-match* iterate-n
+    [(f init 0) '()]
+    [(f init count) (cons init (iterate-n f (f init) (1- count)))])
 
 (define (turn-left vec) (step-direction (modulo (- (vec-to-facing vec) 1) 4)))
 (define (turn-right vec) (step-direction (modulo (+ (vec-to-facing vec) 1) 4)))
 
 (define (choose-next grid point vec)
-  (let* (
-        (left (turn-left vec))
-        (right (turn-right vec))
-        (ahead (point+ point vec))
-        (inside-left (point+ ahead left))
-        (outside-right (point+ point right)))
+  (let* [(left (turn-left vec))
+         (right (turn-right vec))
+         (ahead (point+ point vec))
+         (inside-left (point+ ahead left))
+         (outside-right (point+ point right))]
     (cond
       ((hash-ref grid inside-left) (cons inside-left left))
       ((hash-ref grid ahead) (cons ahead vec))
       ((hash-ref grid outside-right) (cons point right)))))
 
-
 (define (follow-boundary grid start vec n)
   (if (= n 0)
     '()
-    (let* ((first-edge (iterate-n (lambda (p) (point+ p vec)) start cube-size))
+    (let* ((first-edge (iterate-n (lambda (p) (point+ p vec)) start (cube-size grid)))
            (next (choose-next grid (last first-edge) vec))
            (next-start (car next))
            (next-vec (cdr next)))
       (cons (map (partial list (turn-right vec)) first-edge) (follow-boundary grid next-start next-vec (- n 1))))))
 
-(define (assemble plan boundary)
+(define (assemble matching-function boundary-segments)
   (pipe>
-    (sort (map cons plan boundary) (lambda (x y) (< (car x) (car y))))
-    (map cdr)
-    (chunk 2)
-    (append-map (lambda (parts) (map list (first parts) (reverse (second parts)))))
-    )
-  )
+    (pair-by matching-function boundary-segments)
+    (append-map (lambda (parts) (map list (first parts) (reverse (second parts)))))))
 
 (define (point-back point) (make-point (- (point-x point)) (- (point-y point))))
 
@@ -174,6 +186,7 @@
                                           (add-bound! p2 (point-back v2) p1 v1))) boundary)
     bounds))
 
+(define (cube-size grid) (sqrt (/ (hash-count (lambda (k v) #t) grid) 6)))
 
 (define-match* cross-product
   ((($ <point3> x1 y1 z1) ($ <point3> x2 y2 z2)) (make-point3 (- (* y1 z2) (* y2 z1)) (- (* z1 x2) (* z2 x1)) (- (* x1 y2) (* x2 y1)))))
