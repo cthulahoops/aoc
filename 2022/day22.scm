@@ -15,14 +15,14 @@
 (define (part1)
   (let* [(grid (read-board))
          (instructions (parse-instructions (car (read-block))))
-         (start-position (make-position (make-point (min-x grid 1) 1) 0))]
+         (start-position (make-position (make-point (min-x grid 1) 1) (make-point 1 0)))]
     (follow-instructions grid instructions start-position wrap-around-edges)
     ))
 
 (define (part2)
   (let* [(grid (read-board))
          (instructions (parse-instructions (car (read-block))))
-         (start-position (make-position (make-point (min-x grid 1) 1) 0))
+         (start-position (make-position (make-point (min-x grid 1) 1) (make-point 1 0)))
          ]
     (follow-instructions grid instructions start-position (segments-match-in-3d grid start-position))
     ))
@@ -33,7 +33,6 @@
          (bounds (create-boundary boundary))
          (final (fold (lambda (instruction position) (apply-instruction grid bounds position instruction)) start-position instructions))]
     (password final)))
-
 
 (define (segments-match-in-3d grid start-position)
   (let* [(cube-size (cube-size grid))
@@ -115,42 +114,32 @@
 
 (define (ahead-of bounds position)
   (match (hash-ref bounds position)
-         (#f (make-position (point+ (position-location position) (step-direction (position-facing position))) (position-facing position)))
+         (#f (make-position (point+ (position-location position) (position-facing position)) (position-facing position)))
          ((? position? wrap-position) wrap-position)))
 
-(define-match step-direction
-  (0 (make-point 1 0))
-  (1 (make-point 0 1))
-  (2 (make-point -1 0))
-  (3 (make-point 0 -1)))
-
-(define-match vec-to-facing
+(define-match vec-to-facing-number
   (($ <point> 1 0) 0)
-  (($ <point> 0 1) 1)
-  (($ <point> -1 0) 2)
-  (($ <point> 0 -1) 3))
+  (vec (1+ (vec-to-facing-number (turn-left vec)))))
 
 (define (step grid bounds position)
   (let ((next (ahead-of bounds position)))
     (match (hash-ref grid (position-location next)) (#\. next)
                                                     (#\# position))))
-
-(define (turn position count) (make-position (position-location position) (modulo (+ (position-facing position) count) 4)))
 (define-match* apply-instruction
-   ((grid bounds position #\L) (turn position -1))
-   ((grid bounds position #\R) (turn position 1))
+   ((grid bounds ($ <position> location facing) #\L) (make-position location (turn-left facing)))
+   ((grid bounds ($ <position> location facing) #\R) (make-position location (turn-right facing)))
    ((grid bounds position 0) position)
    ((grid bounds position (? number? step-count)) (apply-instruction grid bounds (step grid bounds position) (- step-count 1))))
 
-(define (password position)
-  (+ (* 1000 (point-y (position-location position))) (* 4 (point-x (position-location position))) (position-facing position)))
+(define-match password
+  (($ <position> ($ <point> x y) facing) (+ (* 1000 y) (* 4 x) (vec-to-facing-number facing))))
 
 (define-match* iterate-n
     [(f init 0) '()]
     [(f init count) (cons init (iterate-n f (f init) (1- count)))])
 
-(define (turn-left vec) (step-direction (modulo (- (vec-to-facing vec) 1) 4)))
-(define (turn-right vec) (step-direction (modulo (+ (vec-to-facing vec) 1) 4)))
+(define (turn-left vec) (make-point (point-y vec) (- (point-x vec))))
+(define (turn-right vec) (make-point (- (point-y vec)) (point-x vec)))
 
 (define (choose-next grid point vec)
   (let* [(left (turn-left vec))
@@ -180,13 +169,10 @@
 (define (point-back point) (make-point (- (point-x point)) (- (point-y point))))
 
 (define (create-boundary boundary)
-  (let* ((bounds (make-hash-table))
-         (add-bound! (lambda (p1 v1 p2 v2) (hash-set! bounds (make-position p1 (vec-to-facing v1)) (make-position p2 (vec-to-facing v2))))))
+  (let* [(bounds (make-hash-table))
+         (add-bound! (lambda (p1 v1 p2 v2) (hash-set! bounds (make-position p1 v1) (make-position p2 v2))))]
     (map (match-lambda (((v1 p1) (v2 p2)) (add-bound! p1 (point-back v1) p2 v2)
                                           (add-bound! p2 (point-back v2) p1 v1))) boundary)
     bounds))
 
 (define (cube-size grid) (sqrt (/ (hash-count (lambda (k v) #t) grid) 6)))
-
-(define-match* cross-product
-  ((($ <point3> x1 y1 z1) ($ <point3> x2 y2 z2)) (make-point3 (- (* y1 z2) (* y2 z1)) (- (* z1 x2) (* z2 x1)) (- (* x1 y2) (* x2 y1)))))
