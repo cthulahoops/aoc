@@ -1,6 +1,6 @@
 .mode csv
 create table day1 (first integer, second integer);
-.import '| < inputs/1 sed "s/ \+/,/"' day1
+.import '| < input/1 sed "s/ \+/,/"' day1
 
 select * from day1 limit 3;
 
