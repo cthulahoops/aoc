@@ -1,32 +1,32 @@
-rules = many_sep(tuple2_sep(number, "|", number) -> P $ [ P ] , nl)
-
+rules = table_sep(int, "|", nl)
 page_updates = many_sep(number -> P $ [P], ",")
 sequences = many_sep(page_updates -> P $ [P], nl)
+tuple2_sep(rules, nl & nl, sequences) -> [Rules, Pages] $ TestPages(Rules, Pages)
+
+TestPages(Rules, Pages) = MapSum(Middle, Filter1(TestPageList, Pages, Rules))
 
 Middle(Items) = Items -> [_, ...M, _] ? Middle(M) : ArrayFirst(Items)
 
-IsInOrder(Pages, A, B)
+TestPageList(PageList, Rules) = All1(IsInOrder, Rules, PageList)
+
+IsInOrder(Rule, PageList) = Rule -> [A, B] $ _IsInOrder(PageList, A, B)
+
+_IsInOrder(Pages, A, B)
         = Pages -> [A, ..._] ? True
         : Pages -> [B, ...Rest] ? Not(Contains(Rest, A))
-        : Pages -> [_, ...Rest] ? IsInOrder(Rest, A, B)
+        : Pages -> [_, ...Rest] ? _IsInOrder(Rest, A, B)
         : Pages -> [] $ True
 
 Contains(Items, A)
         = Items -> [A, ..._] ? True
         : Items -> [_, ...Rest] $ Contains(Rest, A)
 
-Not(X) = X -> True ? False : True
+Not(X) = (X -> True ? False : True) -> True
 
+Map1(F, Items, Arg) = Items -> [I, ...Rest] ? [F(I, Arg)] + Map1(F, Rest, Arg) : []
 
-TestPageList(Rules, PageList)
-        = Rules -> [[A, B], ...RestRules]
-        ? (IsTrue(IsInOrder(PageList, A, B)) & TestPageList(RestRules, PageList))
-        : True
+Filter1(F, Items, Arg) = Items -> [I, ...Rest] ? (F(I, Arg) ? [I] + Filter1(F, Rest, Arg) : Filter1(F, Rest, Arg)) : []
+All1(F, Items, Arg) = Items -> [I, ...Rest] ? F(I, Arg) & All1(F, Rest, Arg) : True
 
-IsTrue(Item) = Item -> True
-
-TestPages(Rules, Pages)
-        = Pages -> [PageList, ...RestPages] ? ( TestPageList(Rules, PageList) ? Middle(PageList) : null ) + TestPages(Rules, RestPages)
-        : null 
-
-tuple2_sep(rules, nl & nl, sequences) -> [Rules, Pages] $ TestPages(Rules, Pages)
+MapSum(F, Items) = _MapSum(F, Items, 0)
+_MapSum(F, Items, Acc) = Items -> [I, ...Rest] ? _MapSum(F, Rest, Acc + F(I)) : Acc
