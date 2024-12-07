@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AoC 2024 - Day 6</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .row {
+            display: flex;
+        }
+        .cell {
+            display: block;
+            width: 12px;
+            height: 12px;
+            line-height: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .wall {
+            background-color: black;
+        }
+        
+        .guard {
+            background-color: #dd33dd;
+            color: white;
+        }
+
+        .loop {
+            background-color: #88ff88;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advent of Code - 2024 - Day 6</h1>
+    <div>
+        <label for="mazeInput">Paste your maze grid here:</label>
+        <textarea id="mazeInput" placeholder="Paste your maze grid here..."></textarea>
+        <button id="button">Run</button>
+    </div>
+    <div>
+        <h2>Display:</h2>
+        <div>Visited cells: <span id=visited /></div>
+        <div>Loop cells: <span id=loop /></div>
+        <div id="mazeDisplay"></div>
+    </div>
+
+    <script>
+        const textarea = document.getElementById('mazeInput');
+        const display = document.getElementById('mazeDisplay');
+        const button = document.getElementById('button');
+
+        function cellId({x, y}) {
+            return `cell-${x}-${y}`;
+        }
+
+        const directions = [
+            {'y': -1, 'x': 0},
+            {'y': 0, 'x': 1},
+            {'y': 1, 'x': 0},
+            {'y': 0, 'x': -1},
+        ]
+
+        function displayMaze(textInput) {
+            display.innerHTML = '';
+            let y = 0;
+            let guardPosition = null;
+            let x = 0;
+
+            for (const line of textInput.split('\n')) {
+                if (line.trim() === '') {
+                    continue;
+                }
+                const row = document.createElement('div');
+                row.classList.add('row');
+
+                x = 0;
+
+                for (const char of line) {
+                    const cell = document.createElement('span');
+                    cell.id = cellId({x, y})
+                    cell.textContent = char;
+                    if (char === '#') {
+                        cell.classList.add('wall');
+                    }
+                    cell.classList.add('cell');
+                    row.appendChild(cell);
+
+                    if (char === "^") {
+                        guardPosition = { x, y };
+                    }
+
+                    x += 1;
+                }
+                display.appendChild(row);
+                y += 1;
+            }
+
+            if (!guardPosition) {
+                return;
+            }
+            walkMaze(guardPosition, 0, true);
+            const visitedCells = document.querySelectorAll('.guard');
+            document.getElementById('visited').textContent = visitedCells.length;
+
+            findLoops(guardPosition, 0, visitedCells);
+        }
+
+        async function findLoops(guardPosition, facing, candidates) {
+            for (const cell of candidates) {
+                await new Promise(r => setTimeout(r, 0));
+
+                if (cell.textContent !== '.') {
+                    continue;
+                }
+                console.log("Trying", cell);
+
+                cell.textContent = '#';
+
+                const isLoop = walkMaze(guardPosition, facing);
+
+                if (isLoop) {
+                    cell.classList.add('loop');
+                }
+                cell.textContent = '.';
+            }
+
+            document.getElementById('loop').textContent = document.querySelectorAll('.loop').length;
+        }
+
+        function walkMaze(startPosition, facing, mark = false) {
+            let guardPosition = startPosition;
+
+            let visited = {};
+            let cell;
+            while (cell = document.getElementById(cellId(guardPosition))) {
+                const current = guardPosition.x + ',' + guardPosition.y + ',' + facing;
+                if (visited[current]) {
+                    console.log("Loop detected");
+                    return true;
+                }
+                visited[current] = true;
+
+                if (mark) {
+                    cell.classList.add('guard');
+                }
+
+                const ahead = addVectors(guardPosition, directions[facing % 4]);
+                if (isWall(ahead)) {
+                    facing = (facing + 1) % 4;
+                } else {
+                    guardPosition = ahead;
+                }
+            }
+            return false;
+        }
+
+        function isOnGrid(position, gridSize) {
+            return position.x >= 0 && position.x < gridSize.x && position.y >= 0 && position.y < gridSize.y;
+        }
+
+        function addVectors(a, b) {
+            return { x: a.x + b.x, y: a.y + b.y };
+        }
+
+        function isWall(position) {
+            const cell = getCell(position);
+            return cell && cell.textContent === '#';
+        }
+
+        function getCell(position) {
+            return document.getElementById(cellId(position));
+        }
+
+        button.addEventListener('click', function() { displayMaze(textarea.value); });
+    </script>
+</body>
+</html>
