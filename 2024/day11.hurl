@@ -63,58 +63,54 @@ let count_stones = func(value, steps) {
     };
 };
 
-let count = 0;
-let steps = 25;
+let map = func(f, elements) {
+    let inner = func(n) {
+        try {
+            hurl n > len(elements);
+        } catch(true) {
+            true;
+        } catch(false) {
+            try {
+                f(at(elements, n));
+            } catch as x {
+                try {
+                    hurl n == len(elements);
+                } catch(true) {
+                    hurl x;
+                } catch(false) {
+                    toss x;
+                };
+                return;
+            };
+            inner(n + 1);
+        };
+    };
+
+    inner(1);
+};
+
+let sum = func(f) {
+    let total = 0;
+    try {
+        f();
+    } catch as x {
+        total = total + x;
+        return;
+    };
+    hurl total;
+};
 
 # let input = [125, 17];
-# let input = [773, 79858, 0, 71, 213357, 2937, 1, 3998391];
+let input = [773, 79858, 0, 71, 213357, 2937, 1, 3998391];
+let steps = 25;
 
 try {
-    count_stones(773, steps);
-} catch as x {
-    count = count + x;
+    sum(func() {
+        let f = func(x) {
+            count_stones(x, steps);
+        };
+        map(f, input);
+    });
+} catch as part1 {
+    println("Part 1: ", part1);
 };
-
-try {
-    count_stones(79858, steps);
-} catch as x {
-    count = count + x;
-};
-
-try {
-    count_stones(0, steps);
-} catch as x {
-    count = count + x;
-};
-
-try {
-    count_stones(71, steps);
-} catch as x {
-    count = count + x;
-};
-
-try {
-    count_stones(213357, steps);
-} catch as x {
-    count = count + x;
-};
-
-try {
-    count_stones(2937, steps);
-} catch as x {
-    count = count + x;
-};
-
-try {
-    count_stones(1, steps);
-} catch as x {
-    count = count + x;
-};
-
-try {
-    count_stones(3998391, steps);
-} catch as x {
-    count = count + x;
-};
-
-println("Part 1: ", count);
