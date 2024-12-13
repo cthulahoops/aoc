@@ -1,0 +1,35 @@
+- [X] sqlite
+- [X] bash
+- [X] awk
+- [X] vimscript
+- [X] possum
+- [X] html/js/css
+- [X] haskell
+- [X] c
+- [X] erlang
+- [X] perl
+- [X] hurl
+- [X] fortran 90
+- [X] julia
+- [ ] c++
+- [ ] ruby
+- [ ] elixir
+- [ ] gleam
+- [ ] lua
+- [ ] javascript
+- [ ] typescript
+- [ ] racket
+- [ ] rust
+- [ ] python
+- [ ] java
+- [ ] kotlin
+- [ ] swift
+- [ ] go
+- [ ] scala
+- [ ] clojure
+- [ ] f#
+- [ ] ocaml
+- [ ] reasonml
+- [ ] purescript
+- [ ] elm
+- [ ] idris
