@@ -2,3 +2,8 @@ input
 __pycache__
 .python-version
 target
+*.hi
+*.mod
+*.beam
+*.o
+pfds
