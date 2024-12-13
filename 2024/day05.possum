@@ -1,7 +1,8 @@
 rules = table_sep(int, "|", nl)
 page_updates = many_sep(number -> P $ [P], ",")
 sequences = many_sep(page_updates -> P $ [P], nl)
-tuple2_sep(rules, nl & nl, sequences) -> [Rules, Pages] $ TestPages(Rules, Pages)
+
+tuple2_sep(rules, nl & nl, sequences) -> [Rules, Pages] $ Part2(Rules, Pages)
 
 TestPages(Rules, Pages) = MapSum(Middle, Filter1(TestPageList, Pages, Rules))
 
@@ -21,6 +22,7 @@ Contains(Items, A)
         = Items -> [A, ..._] ? True
         : Items -> [_, ...Rest] $ Contains(Rest, A)
 
+
 Not(X) = (X -> True ? False : True) -> True
 
 Map1(F, Items, Arg) = Items -> [I, ...Rest] ? [F(I, Arg)] + Map1(F, Rest, Arg) : []
@@ -30,3 +32,14 @@ All1(F, Items, Arg) = Items -> [I, ...Rest] ? F(I, Arg) & All1(F, Rest, Arg) : T
 
 MapSum(F, Items) = _MapSum(F, Items, 0)
 _MapSum(F, Items, Acc) = Items -> [I, ...Rest] ? _MapSum(F, Rest, Acc + F(I)) : Acc
+
+
+Part2(Rules, Pages) = Thing(Rules, ArrayFirst(Pages))
+
+Thing(Rules, Page) = [Page, Map1(Relevant, Rules, Page)]
+
+Relevant(Rule, PageList) = Rule -> [A, B] $ Contains(PageList, A) & Contains(PageList, B) $ True
+
+Reachable(Start, Rules) = Rules -> [[A, B], ...Rest] ? (Eq(Start, A) ? 1 + Reachable(B, Rules) : 0) + Reachable(Start, Rest) : 0
+
+Eq(A, B) = A -> B ? True : False
