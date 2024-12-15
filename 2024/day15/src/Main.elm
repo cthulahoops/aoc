@@ -49,6 +49,16 @@ isValidOperation : Char -> Bool
 isValidOperation c =
     c == '>' || c == '<' || c == '^' || c == 'v'
 
+doubleElements : List Char -> List Char
+doubleElements list = List.concatMap replacement list
+
+replacement : Char -> List Char
+replacement x =
+  case x of
+    'O' -> ['[', ']']
+    '@' -> ['@', '.']
+    _ -> [x, x]
+
 updateInput : String -> Model -> Model
 updateInput newInput model =
     let
@@ -66,6 +76,7 @@ updateInput newInput model =
         grid =
             lines
                 |> List.map String.toList
+                |> List.map doubleElements
                 |> List.map Array.fromList
                 |> Array.fromList
     in
@@ -197,7 +208,7 @@ stepGrid operation board =
     (dx, dy) = direction operation
     (x, y) = board.player
   in
-    case move board.grid '@' (dx, dy) (x, y) of
+    case move True board.grid '@' (dx, dy) (x, y) of
       Just newGrid ->
         { board |
           grid = newGrid,
@@ -206,23 +217,44 @@ stepGrid operation board =
       Nothing ->
         board
 
-move : Grid -> Char -> (Int, Int) -> (Int, Int) -> Maybe Grid
-move grid element (dx, dy) (x, y) =
+move : Bool -> Grid -> Char -> (Int, Int) -> (Int, Int) -> Maybe Grid
+move moveConnected grid element (dx, dy) (x, y) =
   let
     (newX, newY) = (x + dx, y + dy)
     atNewPosition = getElement grid newX newY
   in
-    case atNewPosition of
-      Just '.' ->
-        Just (setElement (setElement grid x y '.') newX newY element)
-      Just 'O' ->
-        case move grid 'O' (dx, dy) (newX, newY) of
+    case if moveConnected then connectedElement element else Nothing of
+      Just (connected, connected_x, connected_y) ->
+        case move False grid connected (dx, dy) (x + connected_x, y + connected_y) of
           Just newGrid ->
-            Just (setElement (setElement newGrid x y '.') newX newY element)
+            move False newGrid element (dx, dy) (x, y)
           Nothing ->
             Nothing
-      _ ->
-        Nothing
+      Nothing ->
+        case atNewPosition of
+          Just '.' ->
+            Just (setElement (setElement grid x y '.') newX newY element)
+          Just obstacle ->
+            if isPushable obstacle then
+              case move True grid obstacle (dx, dy) (newX, newY) of
+                Just newGrid ->
+                  Just (setElement (setElement newGrid x y '.') newX newY element)
+                Nothing ->
+                  Nothing
+            else
+              Nothing
+          _ ->
+            Nothing
+
+isPushable : Char -> Bool
+isPushable c = c == 'O' || c == '[' || c == ']'
+
+connectedElement : Char -> Maybe (Char, Int, Int)
+connectedElement c =
+  case c of
+    '[' -> Just (']', 1, 0)
+    ']' -> Just ('[', -1, 0)
+    _ -> Nothing
 
 -- The player is represented by the character '@'
 findPlayer : Grid -> Int -> Int -> (Int, Int)
@@ -260,6 +292,6 @@ crateIndexes grid =
         |> List.concatMap
             (\(y, row) ->
                 Array.toIndexedList row
-                    |> List.filter (\(_, c) -> c == 'O')
+                    |> List.filter (\(_, c) -> c == '[' || c == 'O')
                     |> List.map (\(x, _) -> (x, y))
             )
