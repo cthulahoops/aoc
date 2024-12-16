@@ -11,11 +11,13 @@
 - [X] hurl
 - [X] fortran 90
 - [X] julia
+- [X] zig
+- [X] elm
+- [X] lua
 - [ ] c++
 - [ ] ruby
 - [ ] elixir
 - [ ] gleam
-- [ ] lua
 - [ ] javascript
 - [ ] typescript
 - [ ] racket
@@ -31,5 +33,4 @@
 - [ ] ocaml
 - [ ] reasonml
 - [ ] purescript
-- [ ] elm
 - [ ] idris
