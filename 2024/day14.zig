@@ -31,9 +31,21 @@ pub fn main() !void {
     var best_safety: i32 = 2<<29;
     var best_step: i32 = 0;
 
-    const total_steps = gridSize.x * gridSize.y;
     var step: i32 = 0;
-    while (step < total_steps) : (step += 1) {
+    while (step < gridSize.x) : (step += 1) {
+        const safety = safety_factor(robots, gridSize, step);
+        if (safety < best_safety) {
+            best_safety = safety;
+            best_step = step;
+        }
+    }
+
+    std.debug.print("Best vertical safety factor: {d} at step {d}", .{best_safety, best_step});
+
+    step = best_step;
+
+    while (step < gridSize.y * gridSize.x) : (step += gridSize.x) {
+        std.debug.print("Step {d}:\n", .{step});
         const safety = safety_factor(robots, gridSize, step);
         if (safety < best_safety) {
             best_safety = safety;
