@@ -1,0 +1,8 @@
+0:  BST 4        ; [2,4]     registers.B = registers.A % 8
+2:  BXL 5        ; [1,5]     registers.B ^= 5
+4:  CDV 5        ; [7,5]     registers.C = registers.A / 2 ** registers.B
+6:  BXL 6        ; [1,6]     registers.B ^= 6
+8:  BXC 3        ; [4,3]     registers.B ^= registers.C
+10: OUT 5        ; [5,5]     append(outputs, B % 8)
+12: ADV 3        ; [0,3]     registers.A = registers.A / 8
+14: JNZ 0        ; [3,0]     Jump to index 0 if Register A is not zero
