@@ -1,37 +1,68 @@
 #!/usr/bin/env ruby
 
-if ARGV.empty?
-  puts "Usage: #{$0} filename"
-  exit 1
+def count_ways(target, substrings, memo = {})
+  return 1 if target.empty?
+  return memo[target] if memo.key?(target)
+
+  count = 0
+  substrings.each do |sub|
+    if target.start_with?(sub)
+      remaining = target[sub.length..]
+      count += count_ways(remaining, substrings, memo)
+    end
+  end
+
+  memo[target] = count
+  count
 end
 
-begin
+def egrep_approach(data, patterns)
+  pattern = "^(#{patterns.join('|')})*$"
+
+  matching_items = []
+  IO.popen(['egrep', pattern], 'w+') do |grep|
+    data.each { |item| grep.puts(item) }
+    grep.close_write
+
+    matching_items = grep.readlines.map(&:chomp)
+  end
+
+  return matching_items
+end
+
+def parse_input(filename)
   lines = File.readlines(ARGV[0], chomp: true)
-rescue Errno::ENOENT
-  puts "Error: File '#{ARGV[0]}' not found"
-  exit 1
-rescue => e
-  puts "Error reading file: #{e.message}"
-  exit 1
+
+  patterns = lines[0].split(',').map(&:strip)
+
+  unless lines[1].empty?
+    puts "Error: Second line must be blank"
+    exit 1
+  end
+
+  data = lines[2..]
+
+  return patterns, data
 end
 
-header = lines[0].split(',').map(&:strip).sort().join('|')
-pattern = "^(#{header})*$"
+def main
+  if ARGV.empty?
+    puts "Usage: #{$0} filename"
+    exit 1
+  end
 
-unless lines[1].empty?
-  puts "Error: Second line must be blank"
-  exit 1
+  patterns, data = parse_input(ARGV[0])
+
+  puts "Part 1 (egrep): #{egrep_approach(data, patterns).size}"
+
+  ways = data.map do |line| 
+    count_ways(line, patterns)
+  end
+
+  puts "Part 1: #{ways.select { |x| x > 0 }.length}"
+  puts "Part 2: #{ways.sum}"
 end
 
-data = lines[2..]
-
-matching_items = []
-IO.popen(['egrep', pattern], 'w+') do |grep|
-  data.each { |item| grep.puts(item) }
-  grep.close_write
-
-  matching_items = grep.readlines.map(&:chomp)
+if __FILE__ == $0
+  main
 end
-
-puts "Part 1: #{matching_items.size}"
-
