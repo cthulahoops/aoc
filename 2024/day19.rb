@@ -16,6 +16,12 @@ def count_ways(target, substrings, memo = {})
   count
 end
 
+def simple_approach(data, patterns)
+  pattern = "^(#{patterns.join('|')})*$"
+  data.select { |item| item.match?(pattern) }
+  return ways
+end
+
 def egrep_approach(data, patterns)
   pattern = "^(#{patterns.join('|')})*$"
 
@@ -53,7 +59,9 @@ def main
 
   patterns, data = parse_input(ARGV[0])
 
-  puts "Part 1 (egrep): #{egrep_approach(data, patterns).size}"
+  # puts "Part 1 (egrep): #{egrep_approach(data, patterns).size}"
+
+  puts "Part 1 (simple): #{simple_approach(data, patterns).size}"
 
   ways = data.map do |line| 
     count_ways(line, patterns)
