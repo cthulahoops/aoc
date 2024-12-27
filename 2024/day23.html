@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<script
+  src="https://unpkg.com/dusa@0.1.6"
+  integrity="sha384-dQ1a/faivdqPhpQcxYG+tCkmln6OAQAi5gccaliGtbeOcGFGgXlsLuSKl+h8Jp8r"
+  crossorigin="anonymous"
+></script>
+</head>
+<body>
+
+<textarea id="input" style="width: 100%; height: 200px;">
+</textarea>
+
+<button id="solve">Solve</button>
+
+</body>
+</html>
+
+<script>
+
+const program = `
+    #builtin STRING_CONCAT concat
+
+    tail "a".
+    tail "b".
+    tail "c".
+    tail "d".
+    tail "e".
+    tail "f".
+    tail "g".
+    tail "h".
+    tail "i".
+    tail "j".
+    tail "k".
+    tail "l".
+    tail "m".
+    tail "n".
+    tail "o".
+    tail "p".
+    tail "q".
+    tail "r".
+    tail "s".
+    tail "t".
+    tail "u".
+    tail "v".
+    tail "w".
+    tail "x".
+    tail "y".
+    tail "z".
+
+    tname X :- tail Y, concat "t" Y is X.
+
+    tedge X :- edge X Y, tname X.
+
+    edge Y X :- edge X Y.
+
+    lan_party X Y Z :- edge X Y, edge X Z, edge Y Z, Y > X, Z > Y, tname X.
+    lan_party X Y Z :- edge X Y, edge X Z, edge Y Z, Y > X, Z > Y, tname Y.
+    lan_party X Y Z :- edge X Y, edge X Z, edge Y Z, Y > X, Z > Y, tname Z.
+`;
+
+const textarea = document.getElementById("input");
+const solveButton = document.getElementById("solve");
+
+
+function solve() {
+    const connections = textarea.value.split("\n");
+    const edges = [];
+    for (const connection of connections) {
+        const [a, b] = connection.split("-");
+        edges.push(`edge "${a}" "${b}".`);
+    }
+
+    const program_text = edges.join("\n") + program;
+
+    // console.log(program_text);
+
+    const dusa = new Dusa(program_text);
+
+    const solution = dusa.solution;
+
+    let count = 0;
+    for (const edge of solution.lookup("lan_party")) {
+        console.log(edge);
+        count++;
+    }
+
+    console.log("Solution count: " + count);
+}
+
+document.getElementById("solve").addEventListener("click", solve);
+
+</script>
