@@ -1,36 +1,32 @@
 use std::env;
 use std::fs::File;
 use std::io::{self, BufRead};
+use std::collections::HashMap;
 
-fn mix(secret: u64, value: u64) -> u64 {
+fn mix(secret: i64, value: i64) -> i64 {
     secret ^ value
 }
 
-fn prune(secret: u64) -> u64 {
+fn prune(secret: i64) -> i64 {
     secret % 16777216
 }
 
-fn evolve_secret(mut secret: u64) -> u64 {
-    let result = secret * 64;
-    secret = mix(secret, result);
-    secret = prune(secret);
+fn mix_prune(secret: i64, stepped: i64) -> i64 {
+    prune(mix(secret, stepped))
+}
 
-    let result = secret / 32;
-    secret = mix(secret, result);
-    secret = prune(secret);
-
-    let result = secret * 2048;
-    secret = mix(secret, result);
-    secret = prune(secret);
-    secret
+fn evolve_secret(mut secret: i64) -> i64 {
+    secret = mix_prune(secret, secret * 64);
+    secret = mix_prune(secret, secret / 32);
+    mix_prune(secret, secret * 2048)
 }
 
 struct SecretSequence {
-    current: u64,
+    current: i64,
 }
 
 impl SecretSequence {
-    fn new(initial: u64) -> Self {
+    fn new(initial: i64) -> Self {
         SecretSequence {
             current: initial,
         }
@@ -38,7 +34,7 @@ impl SecretSequence {
 }
 
 impl Iterator for SecretSequence {
-    type Item = u64;
+    type Item = i64;
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = self.current;
@@ -47,10 +43,101 @@ impl Iterator for SecretSequence {
     }
 }
 
-fn find_nth_number(start: u64, n: usize) -> u64 {
+fn find_nth_number(start: i64, n: usize) -> i64 {
     SecretSequence::new(start)
         .nth(n)
         .expect("Failed to generate sequence")
+}
+
+fn read_input(file_path: &str) -> Vec<i64> {
+    let file = File::open(file_path).expect("Failed to open file");
+    let reader = io::BufReader::new(file);
+
+    reader
+        .lines()
+        .map(|line| {
+            line.expect("Failed to read line")
+                .parse::<i64>()
+                .expect("Failed to parse number")
+        })
+        .collect()
+}
+
+type MonkeyMemory = [i64; 4];
+type Options = HashMap<MonkeyMemory, i64>;
+
+const STEPS: usize = 2000;
+
+
+fn sequence_options(start: i64) -> Options {
+   // println!("Starting with: {}", start);
+    let mut sequence = SecretSequence::new(start).take(STEPS + 1);
+
+    let mut last = [
+        // start % 10,  // Q: is the inital number counted?
+        sequence.next().unwrap() % 10,
+        sequence.next().unwrap() % 10,
+        sequence.next().unwrap() % 10,
+        sequence.next().unwrap() % 10,
+    ];
+
+//    println!("Initial last: {:?}", last);
+
+    let mut options = HashMap::new();
+
+    for number in sequence {
+        let current = number % 10;
+
+        let diffs = [
+            last[1] - last[0],
+            last[2] - last[1],
+            last[3] - last[2],
+            current - last[3],
+        ];
+
+        if !options.contains_key(&diffs) {
+            options.insert(diffs, current);
+        }
+
+        last = [last[1], last[2], last[3], current];
+
+    }
+
+    options
+}
+
+fn best(options: std::collections::HashMap<[i64; 4], i64>) -> (i64, [i64; 4]) {
+    let mut best_value = 0;
+    let mut best_key = [0, 0, 0, 0];
+
+    for (key, value) in options.iter() {
+        if *value > best_value {
+            best_key = *key;
+            best_value = *value;
+        }
+    }
+
+    (best_value, best_key)
+}
+
+pub fn print_great(options: std::collections::HashMap<[i64; 4], i64>) {
+    for (key, value) in options.iter() {
+        if *value > 20 {
+            println!("{:?} -> {}", key, value);
+        }
+    }
+}
+
+
+fn add_options(options: Options, other: Options) -> Options {
+    let mut result = options;
+
+    for (key, value) in other.iter() {
+        let old_value = result.get(key).unwrap_or(&0);
+        result.insert(*key, old_value + value);
+    }
+
+    result
 }
 
 fn main() -> io::Result<()> {
@@ -61,23 +148,29 @@ fn main() -> io::Result<()> {
     }
 
     let file_path = &args[1];
-    let file = File::open(file_path)?;
-    let reader = io::BufReader::new(file);
+
+    let input = read_input(file_path);
 
     let mut total = 0;
 
-    for line in reader.lines() {
-        let initial = line?.parse::<u64>().unwrap_or_else(|_| {
-            eprintln!("Error: Invalid number in input file");
-            std::process::exit(1);
-        });
-
-        let result = find_nth_number(initial, 2000);
+    for initial in &input {
+        let result = find_nth_number(*initial, STEPS);
         total += result;
-        println!("Starting from {}: 2000th number is {}", initial, result);
     }
 
-    println!("Total: {}", total);
+    println!("Part 1: {}", total);
+
+    let mut options = HashMap::new();
+
+    for initial in input {
+        options = add_options(options, sequence_options(initial));
+    }
+
+    // print_great(options.clone());
+
+    let part2 = best(options);
+
+    println!("Part 2: {:?}", part2);
 
     Ok(())
 }
