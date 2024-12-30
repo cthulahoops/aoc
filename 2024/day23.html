@@ -19,74 +19,71 @@
 
 <script>
 
-const program = `
-    #builtin STRING_CONCAT concat
+const part1 = `
+#builtin STRING_CONCAT concat
 
-    tail "a".
-    tail "b".
-    tail "c".
-    tail "d".
-    tail "e".
-    tail "f".
-    tail "g".
-    tail "h".
-    tail "i".
-    tail "j".
-    tail "k".
-    tail "l".
-    tail "m".
-    tail "n".
-    tail "o".
-    tail "p".
-    tail "q".
-    tail "r".
-    tail "s".
-    tail "t".
-    tail "u".
-    tail "v".
-    tail "w".
-    tail "x".
-    tail "y".
-    tail "z".
+node X :- edge X _.
 
-    tname X :- tail Y, concat "t" Y is X.
+tname X :- node X, concat "t" _ is X.
 
-    tedge X :- edge X Y, tname X.
+edge Y X :- edge X Y.
 
-    edge Y X :- edge X Y.
+clique3 X Y Z :- edge X Y, edge X Z, edge Y Z, X < Y, Y < Z.
 
-    lan_party X Y Z :- edge X Y, edge X Z, edge Y Z, Y > X, Z > Y, tname X.
-    lan_party X Y Z :- edge X Y, edge X Z, edge Y Z, Y > X, Z > Y, tname Y.
-    lan_party X Y Z :- edge X Y, edge X Z, edge Y Z, Y > X, Z > Y, tname Z.
+lan_party X Y Z :- clique3 X Y Z, tname X.
+lan_party X Y Z :- clique3 X Y Z, tname Y.
+lan_party X Y Z :- clique3 X Y Z, tname Z.
 `;
+
+const part2 = `
+#builtin STRING_CONCAT concat
+#builtin NAT_SUCC s
+
+edge Y X :- edge X Y.
+
+clique 2 (cons X (cons Y nil)) (concat X "," Y) :- edge X Y, X < Y.
+clique (s N) (cons X (cons Y Cl)) (concat X "," JoinedTail) :-
+   edge X Y,
+   X < Y,
+   clique N (cons X Cl) _,
+   clique N (cons Y Cl) JoinedTail.
+
+maxclique is? (tuple N Cl Joined) :- clique N Cl Joined.
+#forbid maxclique is (tuple N _ _), clique N2 _ _, N < N2.
+
+answer is J :- maxclique is (tuple N Cl J).
+`
 
 const textarea = document.getElementById("input");
 const solveButton = document.getElementById("solve");
-
 
 function solve() {
     const connections = textarea.value.split("\n");
     const edges = [];
     for (const connection of connections) {
         const [a, b] = connection.split("-");
-        edges.push(`edge "${a}" "${b}".`);
+        edges.push({name: "edge", args: [a, b]});
     }
 
-    const program_text = edges.join("\n") + program;
+    const answer1 = count(getSolution(part1, edges).lookup("lan_party"));
+    console.log("Part 1: ", answer1);
 
-    // console.log(program_text);
+    const answer2 = getSolution(part2, edges).get("answer");
+    console.log("Part 2: ", answer2);
+}
 
-    const dusa = new Dusa(program_text);
+function getSolution(program, edges) {
+    const dusa = new Dusa(program);
+    dusa.assert(...edges);
+    return dusa.solution;
+}
 
-    const solution = dusa.solution;
-
-    let count = 0;
-    for (const edge of solution.lookup("lan_party")) {
-        console.log(edge);
-        count++;
+function count(iterable) {
+    let result = 0;
+    for (const _ of iterable) {
+        result++;
     }
-
-    console.log("Solution count: " + count);
+    return result;
 }
 
 document.getElementById("solve").addEventListener("click", solve);
