@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="src/day1.ts" type="module"></script>
+        <style>
+.dial {
+    position: relative;
+    background-color: #006600;
+    width: 100px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 10px solid red;
+    transform: rotate(180deg);
+    transition: transform 25ms ease-in-out;
+}
+
+.dial::after {
+    content: "";
+    background-color: #cccc44;
+    width: 15px;
+    aspect-ratio: 1;
+    position: absolute;
+    top: -15px;
+    left: calc(50% - 7.5px);
+}
+
+body {
+    display: flex;
+    gap: 2rem;
+}
+
+.part1, .part2 {
+    font-style: monospace;
+    font-size: 20px;
+}
+
+.solution {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+}
+
+        </style>
+    <body>
+        <div class="solution" id="example">
+            <h2>Example</h2>
+            <div class="dial" id="example"></div>
+            <div class="part1"></div>
+            <div class="part2"></div>
+        </div>
+        <div class="solution" id="input">
+            <h2>My Input</h2>
+            <div class="dial" id="example"></div>
+            <div class="part1"></div>
+            <div class="part2"></div>
+        </div>
+    </body>
+</html>

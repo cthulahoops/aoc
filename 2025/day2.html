@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="src/day2.ts" type="module"></script>
+        <style>
+#input-selection {
+    border: 1px solid black;
+    margin: 0.5rem;
+    padding: 0.5rem;
+    background-color: #ccaacc;
+}
+
+#solution > * {
+    border: 1px solid black;
+    margin: 0.5rem;
+    padding: 0.5rem;
+}
+
+.solutions {
+    background-color: #aacccc;
+}
+
+.invalid .pattern { color: orange; }
+.invalid-1 .pattern { color: red; }
+.pattern { font-weight: 700; }
+ul { display: flex; flex-wrap: wrap; list-style-type: none;}
+li { padding: 0.25rem; }
+        </style>
+    </head>
+    <body>
+        <div id="input-selection">
+            <div>
+                <input type="radio" id="example" name="dataset" value="example">
+                <label for="example">Example Data</label>
+            </div>
+            <div>
+                <input type="radio" id="input" name="dataset" value="input">
+                <label for="input">Input File</label>
+            </div>
+        </div>
+
+        <div id="solution"></div>
+    </body>
+</html>
