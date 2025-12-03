@@ -1,3 +1,3 @@
-import { createContext, useState, useMemo } from "react";
+import { createContext } from "react";
 
 export const InputContext = createContext("");
