@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { useContext, useRef, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { InputContext } from "./contexts";
 import { InputProvider } from "./InputProvider";
 import { parseLines } from "./parse.ts";
@@ -17,51 +17,50 @@ function parseCommand(instruction: string) {
   throw new Error(`Invalid instruction: ${instruction}`);
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+import "react";
+
+declare module "react" {
+  interface CSSProperties {
+    [key: `--${string}`]: string | number;
+  }
 }
 
-async function day1(
-  elementRef: React.RefObject<HTMLDivElement | null>,
-  commands: string,
-) {
-  const lines = commands.split("\n").filter((item) => item);
-  const distances = lines.map(parseCommand);
+type State = {
+  commands: string[];
+  offset: number;
+  part1: number;
+  part2: number;
+  value: number;
+  steps: number;
+};
 
-  let value = 50;
-  let part1 = 0;
-  let part2 = 0;
+function activeCommand(state: State): string | undefined {
+  return state.commands[state.offset];
+}
 
-  for (const distance of distances) {
-    for (let i = 0; i < Math.abs(distance); i++) {
-      await sleep(30);
-      if (distance < 0) {
-        value -= 1;
-      } else {
-        value += 1;
-      }
+function updateState(state: State): State {
+  const command = activeCommand(state);
+  if (!command) {
+    return state;
+  }
+  const distance = parseCommand(command);
 
-      if (elementRef.current) {
-        elementRef.current.style.setProperty("--value", String(value));
-      }
-      if (value % 100 === 0) {
-        part2 += 1;
-        if (elementRef.current) {
-          document.getElementById("part2")!.textContent = String(part2);
-        }
-      }
+  if (state.steps < Math.abs(distance)) {
+    state.value += Math.sign(distance);
+    state.steps++;
+
+    if (state.value % 100 === 0) {
+      state.part2++;
     }
-    await sleep(100);
-    if (value % 100 === 0) {
-      part1 += 1;
-      if (elementRef.current) {
-        document.getElementById("part1")!.textContent = String(part1);
-      }
+  } else {
+    state.offset++;
+    state.steps = 0;
+    if (state.value % 100 === 0) {
+      state.part1++;
     }
   }
 
-  console.log("Finished ", part1, part2);
-  return { part1, part2 };
+  return { ...state };
 }
 
 function solve_fast(lines: string[]) {
@@ -89,11 +88,33 @@ function solve_fast(lines: string[]) {
 
 function Day1() {
   const input = useContext(InputContext);
-  const liveRef = useRef<HTMLDivElement>(null);
+
+  const [state, setState] = useState<State>({
+    commands: [],
+    offset: 0,
+    part1: 0,
+    part2: 0,
+    value: 50,
+    steps: 0,
+  });
+
+  useEffect(
+    () =>
+      setState({
+        commands: parseLines(input),
+        offset: 0,
+        part1: 0,
+        part2: 0,
+        value: 50,
+        steps: 0,
+      }),
+    [input],
+  );
 
   useEffect(() => {
-    day1(liveRef, input);
-  }, [input]);
+    const timerId = setInterval(() => setState(updateState), 30);
+    () => clearInterval(timerId);
+  }, []);
 
   const lines = parseLines(input);
 
@@ -105,15 +126,15 @@ function Day1() {
         <div className="part1">Part 1: {part1}</div>
         <div className="part2">Part 2: {part2}</div>
       </div>
-      <div className="solution" ref={liveRef}>
+      <div className="solution" style={{ "--value": String(state.value) }}>
+        <div>{((state.value % 100) + 100) % 100}</div>
         <div
           className="dial"
           style={{ transform: `rotate(calc(3.6deg * var(--value)))` }}
         ></div>
-        <>
-          <div id="part1"></div>
-          <div id="part2"></div>
-        </>
+        <div>{activeCommand(state)}</div>
+        <div id="part1">{state.part1}</div>
+        <div id="part2">{state.part2}</div>
       </div>
     </>
   );
