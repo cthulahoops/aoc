@@ -1,8 +1,7 @@
-import { createRoot } from "react-dom/client";
 import { useContext, useEffect, useState } from "react";
 import { InputContext } from "./contexts";
-import { InputProvider } from "./InputProvider";
 import { parseLines } from "./parse.ts";
+import { renderApp } from "./App";
 
 import example from "./examples/1.txt?raw";
 
@@ -140,13 +139,4 @@ function Day1() {
   );
 }
 
-function App() {
-  return (
-    <InputProvider storageKey="day1/input" example={example}>
-      <Day1 />
-    </InputProvider>
-  );
-}
-
-const root = createRoot(document.getElementById("root")!);
-root.render(<App />);
+renderApp(1, example, <Day1 />);

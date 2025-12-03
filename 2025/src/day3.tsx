@@ -1,24 +1,10 @@
 import example from "./examples/3.txt?raw";
-import { createRoot } from "react-dom/client";
 import { useContext, useState } from "react";
 import { digits, parseLines } from "./parse";
-import { InputProvider } from "./InputProvider";
 import { InputContext } from "./contexts";
 
-// function bestJoltage(line: number[], count: number): number {
-//   let start = 0;
-//   const digits = [];
-//   console.log(line, count);
-//   for (let i = count; i > 0; i--) {
-//     console.log(i, start);
-//     const slice = line.slice(start, line.length - i + 1);
-//     const highest = Math.max(...slice);
-//     start += slice.indexOf(highest) + 1;
-//     digits.push(highest);
-//   }
-//   console.log(digits);
-//   return Number(digits.map(String).join(""));
-// }
+import { renderApp } from "./App";
+
 function bestJoltage(line: number[], count: number): number {
   return joltage(line, bestBatteries(line, count));
 }
@@ -48,14 +34,6 @@ function sum(numbers: number[]) {
   return numbers.reduce((a, b) => a + b, 0);
 }
 
-function App() {
-  return (
-    <InputProvider storageKey="day3/input" example={example}>
-      <Solution />
-    </InputProvider>
-  );
-}
-
 function Solution() {
   const input = useContext(InputContext);
   const [count, setCount] = useState("2");
@@ -75,7 +53,7 @@ function Solution() {
         </div>
       </div>
       <div className="box">
-      <input value={count} onChange={(e) => setCount(e.target.value)} />
+        <input value={count} onChange={(e) => setCount(e.target.value)} />
       </div>
       <ul>
         {batteries.map((x) => (
@@ -88,21 +66,26 @@ function Solution() {
   );
 }
 
-function Batteries({ useCount, batteries }: { useCount: number, batteries: number[] }) {
+function Batteries({
+  useCount,
+  batteries,
+}: {
+  useCount: number;
+  batteries: number[];
+}) {
   const best = bestBatteries(batteries, useCount);
   return (
     <>
       <div className="battery-box">
-          {batteries.map((x, idx) => (
-            <span className={best.includes(idx) ? "best battery" : "battery"}>
-              {x}
-            </span>
-          ))}
+        {batteries.map((x, idx) => (
+          <span className={best.includes(idx) ? "best battery" : "battery"}>
+            {x}
+          </span>
+        ))}
       </div>
-      = { joltage(batteries, best) }
+      = {joltage(batteries, best)}
     </>
   );
 }
 
-const root = createRoot(document.getElementById("root")!);
-root.render(<App />);
+renderApp(3, example, <Solution />);

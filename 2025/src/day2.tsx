@@ -1,17 +1,8 @@
-import { createRoot } from "react-dom/client";
-import { InputProvider } from "./InputProvider";
 import { InputContext } from "./contexts";
 import { useContext } from "react";
+import { renderApp } from "./App";
 
 import example from "./examples/2.txt?raw";
-
-function App() {
-  return (
-    <InputProvider storageKey="day2/input" example={example}>
-      <Solution />
-    </InputProvider>
-  );
-}
 
 function parse(input: string): [number, number][] {
   return input.split(",").map((range) => {
@@ -122,5 +113,4 @@ function Range({
   );
 }
 
-const root = createRoot(document.getElementById("root")!);
-root.render(<App />);
+renderApp(2, example, <Solution />);

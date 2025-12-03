@@ -15,3 +15,6 @@
 textarea {
   width: 100%;
 }
+
+nav ul { display: flex; flex-wrap: wrap; list-style-type: none;}
+nav li { padding: 0.25rem; }
