@@ -1,6 +1,16 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
+import { readdirSync } from "fs";
+
+// Automatically find all day*.html files
+const dayFiles = readdirSync(__dirname)
+  .filter(file => file.match(/^day\d+\.html$/))
+  .reduce((acc, file) => {
+    const name = file.replace('.html', '');
+    acc[name] = resolve(__dirname, file);
+    return acc;
+  }, {});
 
 export default defineConfig({
   plugins: [react()],
@@ -8,9 +18,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
-        day1: resolve(__dirname, "day1.html"),
-        day2: resolve(__dirname, "day2.html"),
-        day3: resolve(__dirname, "day3.html"),
+        ...dayFiles,
       },
     },
   },
