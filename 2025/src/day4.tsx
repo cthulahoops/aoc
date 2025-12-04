@@ -2,13 +2,12 @@ import example from "./examples/4.txt?raw";
 import { useContext } from "react";
 import { InputContext } from "./contexts";
 import { renderApp } from "./App";
+import { useQuery } from "@tanstack/react-query";
 import { Grid, Point } from "./grid";
 import { Solutions } from "./Solutions";
 
-function Solution() {
-  const input = useContext(InputContext);
+async function solve(input: string) {
   const grid = Grid.parse(input);
-
   const removeable: Point[][] = [];
   let round = 0;
   while (true) {
@@ -27,8 +26,25 @@ function Solution() {
     }
   }
 
-  const part1 = removeable[0].length;
-  const part2 = sum(removeable.map((x) => x.length));
+  return {
+    part1: removeable[0].length,
+    part2: sum(removeable.map((x) => x.length)),
+    round: round,
+    grid,
+  };
+}
+function Solution() {
+  const input = useContext(InputContext);
+  const { data, isLoading } = useQuery({
+    queryKey: ["day4", input],
+    queryFn: () => solve(input),
+  });
+
+  if (isLoading || !data) {
+    return <div>Loading</div>;
+  }
+
+  const { part1, part2, round, grid } = data;
 
   const radius = 6;
 

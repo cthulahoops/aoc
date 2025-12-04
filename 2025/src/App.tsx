@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { InputProvider } from "./InputProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export function renderApp(
   day: number,
@@ -19,8 +20,9 @@ function App({
   example: string;
   children: React.ReactNode;
 }) {
+  const queryClient = new QueryClient();
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <nav>
         <ul>
           <li>
@@ -40,6 +42,6 @@ function App({
       <InputProvider storageKey={`day${day}/input`} example={example}>
         {children}
       </InputProvider>
-    </>
+    </QueryClientProvider>
   );
 }
