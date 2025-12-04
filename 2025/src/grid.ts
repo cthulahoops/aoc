@@ -34,12 +34,20 @@ export class Point {
 
 export class Grid<T> {
   private map: Map<string, T>;
+  maxX: number = 0;
+  maxY: number = 0;
 
   constructor() {
     this.map = new Map();
   }
 
   set(location: Point, value: T) {
+    if (location.x > this.maxX) {
+      this.maxX = location.x;
+    }
+    if (location.y > this.maxY) {
+      this.maxY = location.y;
+    }
     this.map.set(location.toPair(), value);
   }
 

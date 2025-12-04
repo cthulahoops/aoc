@@ -1,5 +1,5 @@
 import example from "./examples/4.txt?raw";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { InputContext } from "./contexts";
 import { renderApp } from "./App";
 import { useQuery } from "@tanstack/react-query";
@@ -39,6 +39,16 @@ async function solve(input: string) {
   };
 }
 
+function useFrames(interval: number) {
+  const [currentFrame, setCurrentFrame] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentFrame((x) => x + 1), interval);
+    () => clearInterval(timer);
+  }, [interval]);
+
+  return currentFrame;
+}
+
 function Solution() {
   const input = useContext(InputContext);
   const { data, isLoading } = useQuery({
@@ -46,18 +56,22 @@ function Solution() {
     queryFn: () => solve(input),
   });
 
+  const t = useFrames(100);
+
   if (isLoading || !data) {
     return <div>Loading</div>;
   }
 
   const { part1, part2, roundCount, grid, removed } = data;
 
+  const frame = t % (roundCount + 3);
   const radius = 6;
 
   return (
     <>
+      <div>{frame}</div>
       <Solutions part1={part1} part2={part2} />
-      <svg width={1500} height={1500}>
+      <svg width={grid.maxX * radius * 2} height={grid.maxY * radius * 2}>
         {[...grid].map((item) => (
           <circle
             cx={item[0].x * radius * 2 + radius}
@@ -73,7 +87,7 @@ function Solution() {
             cy={item[0].y * radius * 2 + radius}
             r={radius}
             key={item[0].toPair()}
-            fill={color(item[1], roundCount)}
+            fill={item[1] <= frame ? color(item[1], roundCount) : "black"}
           />
         ))}
       </svg>
