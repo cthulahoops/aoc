@@ -69,7 +69,6 @@ function Solution() {
 
   return (
     <>
-      <div>{frame}</div>
       <Solutions part1={part1} part2={part2} />
       <svg width={grid.maxX * radius * 2} height={grid.maxY * radius * 2}>
         {[...grid].map((item) => (
