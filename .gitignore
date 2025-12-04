@@ -7,3 +7,4 @@ target
 *.beam
 *.o
 pfds
+node_modules
