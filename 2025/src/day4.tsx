@@ -2,11 +2,11 @@ import example from "./examples/4.txt?raw";
 import { useContext } from "react";
 import { InputContext } from "./contexts";
 import { renderApp } from "./App";
-import { parseGrid, Grid, Point } from "./parse";
+import { Grid, Point } from "./grid";
 
 function Solution() {
   const input = useContext(InputContext);
-  const grid = parseGrid(input);
+  const grid = Grid.parse(input);
 
   const removeable: Point[][] = [];
   while (true) {
