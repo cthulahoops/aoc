@@ -2,6 +2,7 @@ import example from "./examples/3.txt?raw";
 import { useContext, useState } from "react";
 import { digits, parseLines } from "./parse";
 import { InputContext } from "./contexts";
+import { Solutions } from "./Solutions";
 
 import { renderApp } from "./App";
 
@@ -44,14 +45,7 @@ function Solution() {
   console.log(part1);
   return (
     <>
-      <div className="solutions box">
-        <div>
-          Part 1: <span>{sum(part1)}</span>
-        </div>
-        <div>
-          Part 2: <span>{sum(part2)}</span>
-        </div>
-      </div>
+      <Solutions part1={sum(part1)} part2={sum(part2)} />
       <div className="box">
         <input value={count} onChange={(e) => setCount(e.target.value)} />
       </div>

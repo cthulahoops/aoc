@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { InputContext } from "./contexts";
 import { renderApp } from "./App";
 import { Grid, Point } from "./grid";
+import { Solutions } from "./Solutions";
 
 function Solution() {
   const input = useContext(InputContext);
@@ -24,10 +25,9 @@ function Solution() {
   const part2 = sum(removeable.map((x) => x.length));
 
   return (
-    <div className="solutions">
-      <div>Part 1: {part1}</div>
-      <div>Part 2: {part2}</div>
-    </div>
+    <>
+      <Solutions part1={part1} part2={part2} />
+    </>
   );
 }
 
