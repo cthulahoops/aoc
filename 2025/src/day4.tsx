@@ -7,7 +7,9 @@ import { Grid, Point } from "./grid";
 import { Solutions } from "./Solutions";
 
 async function solve(input: string) {
-  const grid = Grid.parse(input);
+  console.log("Solving problem");
+  const grid = Grid.parse(input, (x: string) => (x === "@" ? "@" : undefined));
+  const removed = new Grid<number>();
   const removeable: Point[][] = [];
   let round = 0;
   while (true) {
@@ -17,8 +19,10 @@ async function solve(input: string) {
       break;
     }
     removeable.push(accessible);
+
     for (const item of accessible) {
-      grid.set(item, `${round}`);
+      grid.delete(item);
+      removed.set(item, round);
     }
     if (round > 200) {
       // Infinite loop defences.
@@ -29,10 +33,12 @@ async function solve(input: string) {
   return {
     part1: removeable[0].length,
     part2: sum(removeable.map((x) => x.length)),
-    round: round,
+    removed,
+    roundCount: round,
     grid,
   };
 }
+
 function Solution() {
   const input = useContext(InputContext);
   const { data, isLoading } = useQuery({
@@ -44,7 +50,7 @@ function Solution() {
     return <div>Loading</div>;
   }
 
-  const { part1, part2, round, grid } = data;
+  const { part1, part2, roundCount, grid, removed } = data;
 
   const radius = 6;
 
@@ -52,27 +58,31 @@ function Solution() {
     <>
       <Solutions part1={part1} part2={part2} />
       <svg width={1500} height={1500}>
-        {[...grid]
-          .filter((item) => item[1] !== ".")
-          .map((item, idx) => (
-            <circle
-              cx={item[0].x * radius * 2 + radius}
-              cy={item[0].y * radius * 2 + radius}
-              r={radius}
-              key={idx}
-              fill={color(item[1], round)}
-            />
-          ))}
+        {[...grid].map((item) => (
+          <circle
+            cx={item[0].x * radius * 2 + radius}
+            cy={item[0].y * radius * 2 + radius}
+            r={radius}
+            key={item[0].toPair()}
+            fill="black"
+          />
+        ))}
+        {[...removed].map((item) => (
+          <circle
+            cx={item[0].x * radius * 2 + radius}
+            cy={item[0].y * radius * 2 + radius}
+            r={radius}
+            key={item[0].toPair()}
+            fill={color(item[1], roundCount)}
+          />
+        ))}
       </svg>
     </>
   );
 }
 
-function color(item: string, rounds: number) {
-  if (item === "@") {
-    return "black";
-  }
-  const round = (Number(item) * 360) / rounds;
+function color(item: number, rounds: number) {
+  const round = (item * 360) / rounds;
   return `hsl(${round}, 50%, 50%)`;
 }
 
@@ -80,15 +90,12 @@ function sum(numbers: number[]) {
   return numbers.reduce((a, b) => a + b, 0);
 }
 
-function accessibleRolls(grid: Grid) {
+function accessibleRolls(grid: Grid<"@">) {
   const accessible: Point[] = [];
-  for (const [location, value] of grid) {
-    if (value !== "@") {
-      continue;
-    }
+  for (const [location, _value] of grid) {
     let count = 0;
     location.neighbours().forEach((neighbour: Point) => {
-      if (grid.get(neighbour) === "@") {
+      if (grid.get(neighbour)) {
         count++;
       }
     });

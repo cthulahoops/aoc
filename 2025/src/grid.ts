@@ -32,33 +32,40 @@ export class Point {
   }
 }
 
-export class Grid {
-  private map: Map<string, string>;
+export class Grid<T> {
+  private map: Map<string, T>;
 
   constructor() {
     this.map = new Map();
   }
 
-  set(location: Point, value: string) {
+  set(location: Point, value: T) {
     this.map.set(location.toPair(), value);
   }
 
-  get(location: Point) {
+  get(location: Point): T | undefined {
     return this.map.get(location.toPair());
   }
 
-  *[Symbol.iterator](): Generator<[Point, string]> {
+  delete(location: Point) {
+    this.map.delete(location.toPair());
+  }
+
+  *[Symbol.iterator](): Generator<[Point, T]> {
     for (const [pair, value] of this.map) {
       yield [Point.fromPair(pair), value];
     }
   }
 
-  static parse(string: string): Grid {
+  static parse<T>(string: string, f: (item: string) => T | undefined): Grid<T> {
     const lines = parseLines(string);
-    const grid = new Grid();
+    const grid = new Grid<T>();
     lines.forEach((line: string, y: number) => {
       line.split("").forEach((item: string, x: number) => {
-        grid.set(new Point(x, y), item);
+        const value = f(item);
+        if (value !== undefined) {
+          grid.set(new Point(x, y), value);
+        }
       });
     });
     return grid;
