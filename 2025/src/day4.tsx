@@ -5,8 +5,6 @@ import { renderApp } from "./App";
 import { Grid, Point } from "./grid";
 import { Solutions } from "./Solutions";
 
-import "./day4.css";
-
 function Solution() {
   const input = useContext(InputContext);
   const grid = Grid.parse(input);
