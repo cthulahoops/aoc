@@ -45,6 +45,12 @@ function App({
       <InputProvider storageKey={`day${day}/input`} example={example}>
         {children}
       </InputProvider>
+      <a
+        href={`https://github.com/cthulahoops/aoc/blob/main/2025/src/day${day}.tsx`}
+        target="_blank"
+      >
+        Github
+      </a>
     </QueryClientProvider>
   );
 }
