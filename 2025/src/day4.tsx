@@ -5,6 +5,7 @@ import { renderApp } from "./App";
 import { useQuery } from "@tanstack/react-query";
 import { Grid, Point } from "./grid";
 import { Solutions } from "./Solutions";
+import { sum } from "./lib";
 
 async function solve(input: string) {
   console.log("Solving problem");
@@ -97,10 +98,6 @@ function Solution() {
 function color(item: number, rounds: number) {
   const round = (item * 360) / rounds;
   return `hsl(${round}, 50%, 50%)`;
-}
-
-function sum(numbers: number[]) {
-  return numbers.reduce((a, b) => a + b, 0);
 }
 
 function accessibleRolls(grid: Grid<"@">) {
