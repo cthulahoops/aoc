@@ -71,20 +71,20 @@ function Solution() {
   const sorted = ranges.toSorted((a: Range, b: Range) => a.start - b.start);
 
   const maxX = Math.max(...ranges.map((r) => r.end));
-  const scale = 800 / (maxX + 1);
-  console.log("Scale", scale);
+  const scaleX = 800 / (maxX + 1);
+  const scaleY = 5;
 
   return (
     <>
       <Solutions part1={part1} part2={part2} />
-      <svg width={802} height={20 + 10 * ranges.length + 2}>
+      <svg width={802} height={20 + scaleY * ranges.length + 2}>
         {sorted.map((range, idx) => (
           <rect
             key={idx}
-            x={1 + range.start * scale}
-            width={range.length * scale}
-            y={1 + 10 * idx}
-            height={10}
+            x={1 + range.start * scaleX}
+            width={range.length * scaleX}
+            y={1 + scaleY * idx}
+            height={scaleY}
             fill={color(idx, ranges.length)}
             stroke="black"
           />
@@ -93,10 +93,10 @@ function Solution() {
           {disjointRanges.map((range, idx) => (
             <rect
               key={idx}
-              x={1 + range.start * scale}
-              width={range.length * scale}
-              y={11 + 10 * ranges.length}
-              height={10}
+              x={1 + range.start * scaleX}
+              width={range.length * scaleX}
+              y={11 + scaleY * ranges.length}
+              height={scaleY}
               fill="#cc88dd"
               stroke="black"
             />
