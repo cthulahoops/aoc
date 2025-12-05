@@ -28,9 +28,10 @@ function computeDisjoint(ranges: Range[]) {
   const sorted = ranges.toSorted((a: Range, b: Range) => a.start - b.start);
   const disjoint: Range[] = [];
   for (const range of sorted) {
-    const idx = disjoint.findIndex((existing) => existing.intersects(range));
-    if (idx >= 0) {
-      disjoint[idx] = disjoint[idx].merge(range);
+    const last_idx = disjoint.length - 1;
+    const last = disjoint[last_idx];
+    if (last && last.intersects(range)) {
+      disjoint[last_idx] = last.merge(range);
     } else {
       disjoint.push(range);
     }
