@@ -21,7 +21,8 @@ async function solve(input: string) {
   return {
     part1: fresh.length,
     part2: part2,
-    output: disjointRanges,
+    ranges: ranges,
+    disjointRanges: disjointRanges,
   };
 }
 
@@ -65,14 +66,50 @@ function Solution() {
     return <div>Loading</div>;
   }
 
-  const { part1, part2, output } = data;
+  const { part1, part2, ranges, disjointRanges } = data;
+
+  const sorted = ranges.toSorted((a: Range, b: Range) => a.start - b.start);
+
+  const maxX = Math.max(...ranges.map((r) => r.end));
+  const scale = 800 / (maxX + 1);
+  console.log("Scale", scale);
 
   return (
     <>
       <Solutions part1={part1} part2={part2} />
-      <div>{JSON.stringify(output)}</div>
+      <svg width={802} height={20 + 10 * ranges.length + 2}>
+        {sorted.map((range, idx) => (
+          <rect
+            key={idx}
+            x={1 + range.start * scale}
+            width={range.length * scale}
+            y={1 + 10 * idx}
+            height={10}
+            fill={color(idx, ranges.length)}
+            stroke="black"
+          />
+        ))}
+        <g>
+          {disjointRanges.map((range, idx) => (
+            <rect
+              key={idx}
+              x={1 + range.start * scale}
+              width={range.length * scale}
+              y={11 + 10 * ranges.length}
+              height={10}
+              fill="#cc88dd"
+              stroke="black"
+            />
+          ))}
+        </g>
+      </svg>
     </>
   );
+}
+
+function color(item: number, rounds: number) {
+  const round = (item * 360) / rounds;
+  return `hsl(${round}, 50%, 50%)`;
 }
 
 renderApp(5, example, <Solution />);
