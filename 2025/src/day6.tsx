@@ -38,7 +38,7 @@ function part1(lines: string[]) {
   const totals = [];
 
   for (let i = 0; i < homework[0].length; i++) {
-    const operator = OPERATORS[homework[homework.length - 1][i] as "*" | "+"];
+    const operator = OPERATORS[last(homework)[i] as "*" | "+"];
     let result = operator.identity;
 
     for (let j = 0; j < homework.length - 1; j++) {
@@ -58,24 +58,25 @@ function part2(lines: string[]) {
     for (let j = 0; j < lines.length; j++) {
       column.push(lines[j][i]);
     }
-    sheet.push(column.join("").trim());
+    sheet.push(
+      ...column
+        .join("")
+        .trim()
+        .split(/ *\b */)
+        .toReversed(),
+    );
   }
-  const sums = splitOn(sheet, "");
-  sums.forEach((x) => x.reverse());
+  const sums = splitOn(sheet, "").map((x) => x.toReversed());
 
   const totals = [];
   for (const sum of sums) {
-    const operator = OPERATORS[lastChar(last(sum)) as Operator];
-    const terms = sum.map((x) => Number(x.replace(/[ +*]/g, "")));
+    const operator = OPERATORS[sum.pop() as Operator];
+    const terms = sum.slice(0).map((x) => Number(x));
     const total = terms.reduce(operator.operation, operator.identity);
     totals.push(total);
   }
 
   return totals;
-}
-
-function lastChar(items: string): string {
-  return items[items.length - 1];
 }
 
 function last<T>(items: T[]): T {
