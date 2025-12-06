@@ -40,6 +40,9 @@ function App({
           <li>
             <a href="/day5.html">Day 5</a>
           </li>
+          <li>
+            <a href="/day5.html">Day 5</a>
+          </li>
         </ul>
       </nav>
       <InputProvider storageKey={`day${day}/input`} example={example}>
