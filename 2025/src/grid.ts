@@ -18,6 +18,22 @@ export class Point {
     return `${this.x},${this.y}`;
   }
 
+  up() {
+    return new Point(this.x, this.y - 1);
+  }
+
+  down() {
+    return new Point(this.x, this.y + 1);
+  }
+
+  left() {
+    return new Point(this.x - 1, this.y);
+  }
+
+  right() {
+    return new Point(this.x + 1, this.y);
+  }
+
   neighbours() {
     return [
       new Point(this.x + 1, this.y),

@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { InputProvider } from "./InputProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { DayLinks } from "./DayLinks";
 
 export function renderApp(
   day: number,
@@ -24,26 +25,7 @@ function App({
   return (
     <QueryClientProvider client={queryClient}>
       <nav>
-        <ul>
-          <li>
-            <a href="/day1.html">Day 1</a>
-          </li>
-          <li>
-            <a href="/day2.html">Day 2</a>
-          </li>
-          <li>
-            <a href="/day3.html">Day 3</a>
-          </li>
-          <li>
-            <a href="/day4.html">Day 4</a>
-          </li>
-          <li>
-            <a href="/day5.html">Day 5</a>
-          </li>
-          <li>
-            <a href="/day5.html">Day 5</a>
-          </li>
-        </ul>
+        <DayLinks />
       </nav>
       <InputProvider storageKey={`day${day}/input`} example={example}>
         {children}
