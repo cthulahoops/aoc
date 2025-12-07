@@ -5,11 +5,16 @@
 <style>
 .tree {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 5ch);
+    grid-template-columns: repeat(auto-fill, 2ch);
 }
 
 .tree > * {
-    height: 5ch;
+    min-height: 2ch;
+    max-width: 2ch;
+}
+
+.tall-cell {
+    height: 15ch;
 }
 
 </style>

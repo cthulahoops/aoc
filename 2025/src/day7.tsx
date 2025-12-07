@@ -5,7 +5,7 @@ import { renderApp } from "./App";
 import { useQuery } from "@tanstack/react-query";
 import { Solutions } from "./Solutions";
 import { Grid, Point } from "./grid";
-import { ReactComponent as BaubleIcon } from "./bauble.svg";
+import { sum } from "./lib";
 
 type InputGrid = Grid<"S" | "^" | ".">;
 
@@ -29,33 +29,42 @@ async function solve(input: string) {
     star,
     grid,
     cache1,
-    new Set(),
+    () => new Set(),
     (lefts, rights, location) =>
       new Set([...lefts, location.toPair(), ...rights]),
   );
 
-  const cache2 = new Grid<number>();
-  const part2 = reachable(
+  const visits = reachable(
     star,
     grid,
-    cache2,
-    0,
-    (lefts, rights, _location) => lefts + rights + 1,
+    new Grid<Map<Point, number>>(),
+    (point) => new Map([[point, 1]]),
+    (lefts, rights, _location) => sumMap(lefts, rights),
   );
 
   return {
+    star: star,
     part1: part1.size,
-    part2: part2 + 1, // Add 1 because the original timeline is a timeline!
+    part2: sum([...visits.values()]),
     grid: grid,
-    pathCount: cache2,
+    pathCount: cache1,
+    output: visits,
   };
+}
+
+function sumMap<K>(map1: Map<K, number>, map2: Map<K, number>): Map<K, number> {
+  const result: Map<K, number> = new Map([...map1]);
+  for (const [key, value] of map2.entries()) {
+    result.set(key, (result.get(key) || 0) + value);
+  }
+  return result;
 }
 
 function reachable<T>(
   location: Point,
   grid: InputGrid,
   cache: Grid<T>,
-  empty: T,
+  empty: (p: Point) => T,
   combine: (left: T, right: T, location: Point) => T,
 ): T {
   const cached = cache.get(location);
@@ -75,7 +84,7 @@ function reachable<T>(
     cache.set(location, result);
     return result;
   }
-  return empty;
+  return empty(location);
 }
 
 function findStar(grid: InputGrid): Point {
@@ -99,38 +108,49 @@ function Solution() {
     return <div>Loading</div>;
   }
 
-  const { part1, part2, grid, pathCount } = data;
+  const { star, part1, part2, grid, pathCount, output } = data;
 
   return (
     <>
       <Solutions part1={part1} part2={part2} />
-      <div
-        className="tree"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, 5ch)",
-        }}
-      >
-        {[...pathCount].map((item, idx) => (
-          <div
-            key={idx}
-            style={{ gridColumn: item[0].x + 1, gridRow: item[0].y }}
-          >
-            {item[1] + 1}
-          </div>
-        ))}
+      <div className="tree">
+        <GridCell position={star}>🌟</GridCell>
         {[...grid]
           .filter((item) => item[1] === "^")
-          .map((item, idx) => (
-            <div
-              key={`split-${idx}`}
-              style={{ gridColumn: item[0].x + 1, gridRow: item[0].y }}
-            >
-              <BaubleIcon width={30} height={30} />
-            </div>
+          .map(([pos, _value], idx) => (
+            <GridCell position={pos} key={`split-${idx}`}>
+              🪩
+            </GridCell>
           ))}
+        {[...pathCount].map(([pos, _value], idx) => (
+          <GridCell position={pos} key={idx}>
+            ⚡
+          </GridCell>
+        ))}
+
+        {[...output].map(([pos, value], idx) => (
+          <GridCell position={pos} key={`output-${idx}`} className="tall-cell">
+            <div style={{ transform: "rotate(90deg)" }}>{value}</div>
+          </GridCell>
+        ))}
       </div>
     </>
+  );
+}
+
+interface GridCellProps extends React.HTMLAttributes<HTMLDivElement> {
+  position: Point;
+  children: React.ReactNode;
+}
+
+function GridCell({ position, children, ...rest }: GridCellProps) {
+  return (
+    <div
+      style={{ gridColumn: position.x + 1, gridRow: position.y + 1 }}
+      {...rest}
+    >
+      {children}
+    </div>
   );
 }
 
