@@ -44,7 +44,7 @@ async function solve(input: string) {
 
   return {
     part1: part1.size,
-    part2: part2 + 1,
+    part2: part2 + 1, // Add 1 because the original timeline is a timeline!
     output: [],
   };
 }
