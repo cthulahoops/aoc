@@ -1,0 +1,49 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="100%"
+  height="100%"
+  viewBox="0 0 150 220"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <!-- Hanging loop -->
+  <path
+    d="M75 10 a10 10 0 0 1 0 20 a10 10 0 0 1 0 -20z"
+    fill="none"
+    stroke="#7a7a7a"
+    stroke-width="3"
+  />
+  <!-- Cap -->
+  <rect
+    x="60"
+    y="25"
+    width="30"
+    height="15"
+    fill="#b0b0b0"
+    stroke="#7a7a7a"
+    stroke-width="2"
+    rx="3"
+  />
+  <!-- Main body -->
+  <circle
+    cx="75"
+    cy="130"
+    r="60"
+    fill="url(#gradient)"
+    stroke="#5a5a5a"
+    stroke-width="3"
+  />
+  <defs>
+    <radialGradient id="gradient" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#ff6363" />
+      <stop offset="100%" stop-color="#b30000" />
+    </radialGradient>
+  </defs>
+  <!-- Highlight -->
+  <ellipse
+    cx="55"
+    cy="105"
+    rx="15"
+    ry="10"
+    fill="rgba(255,255,255,0.35)"
+  />
+</svg>

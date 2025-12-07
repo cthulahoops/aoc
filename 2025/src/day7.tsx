@@ -5,6 +5,7 @@ import { renderApp } from "./App";
 import { useQuery } from "@tanstack/react-query";
 import { Solutions } from "./Solutions";
 import { Grid, Point } from "./grid";
+import { ReactComponent as BaubleIcon } from "./bauble.svg";
 
 type InputGrid = Grid<"S" | "^" | ".">;
 
@@ -45,7 +46,8 @@ async function solve(input: string) {
   return {
     part1: part1.size,
     part2: part2 + 1, // Add 1 because the original timeline is a timeline!
-    output: [],
+    grid: grid,
+    pathCount: cache2,
   };
 }
 
@@ -97,12 +99,37 @@ function Solution() {
     return <div>Loading</div>;
   }
 
-  const { part1, part2, output } = data;
+  const { part1, part2, grid, pathCount } = data;
 
   return (
     <>
       <Solutions part1={part1} part2={part2} />
-      <div>{JSON.stringify(output)}</div>
+      <div
+        className="tree"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, 5ch)",
+        }}
+      >
+        {[...pathCount].map((item, idx) => (
+          <div
+            key={idx}
+            style={{ gridColumn: item[0].x + 1, gridRow: item[0].y }}
+          >
+            {item[1] + 1}
+          </div>
+        ))}
+        {[...grid]
+          .filter((item) => item[1] === "^")
+          .map((item, idx) => (
+            <div
+              key={`split-${idx}`}
+              style={{ gridColumn: item[0].x + 1, gridRow: item[0].y }}
+            >
+              <BaubleIcon width={30} height={30} />
+            </div>
+          ))}
+      </div>
     </>
   );
 }
