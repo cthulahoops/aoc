@@ -1,7 +1,7 @@
 export function DayLinks() {
   return (
     <ul>
-      {sequence(7).map((day) => (
+      {sequence(8).map((day) => (
         <li key={day}>
           <a href={`/day${day}.html`}>Day {day}</a>
         </li>
