@@ -1,7 +1,6 @@
 import { parseLines } from "./parse";
-import { Point2 } from "./point2";
 
-export class Point extends Point2 {
+export class Point {
   x: number;
   y: number;
 
