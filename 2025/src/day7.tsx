@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Solutions } from "./Solutions";
 import { Grid, Point } from "./grid";
 import { sum } from "./lib";
+import { GridCell } from "./GridCell";
 
 type InputGrid = Grid<"S" | "^" | ".">;
 
@@ -135,22 +136,6 @@ function Solution() {
         ))}
       </div>
     </>
-  );
-}
-
-interface GridCellProps extends React.HTMLAttributes<HTMLDivElement> {
-  position: Point;
-  children: React.ReactNode;
-}
-
-function GridCell({ position, children, ...rest }: GridCellProps) {
-  return (
-    <div
-      style={{ gridColumn: position.x + 1, gridRow: position.y + 1 }}
-      {...rest}
-    >
-      {children}
-    </div>
   );
 }
 
