@@ -20,6 +20,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.11",
     "@vitejs/plugin-react": "^5.1.1",
+    "javascript-lp-solver": "^0.4.24",
     "prettier": "^3.7.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

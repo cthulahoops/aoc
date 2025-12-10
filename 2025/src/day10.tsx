@@ -7,12 +7,63 @@ import { Solutions } from "./Solutions";
 import { parseLines } from "./parse";
 import { sum } from "./lib";
 
+async function createSolver() {
+  return await import("javascript-lp-solver");
+}
+
 async function solve(input: string) {
   console.log("Solving problem");
   const parsed = parseInput(input);
 
+  const solver = await createSolver();
+
+  return {
+    part1: part1(parsed),
+    part2: part2(solver, parsed),
+    output: parsed,
+  };
+}
+
+function part2(solver: any, machines: Machine[]) {
   const results: number[] = [];
-  for (const machine of parsed) {
+  for (const machine of machines) {
+    const model = createModel(machine);
+    const solution = solver.Solve(model);
+    console.log("Solution:", solution);
+    results.push(solution.result);
+  }
+  return sum(results);
+}
+
+function createModel(machine: Machine) {
+  const constraints: Record<string, { equal: number }> = {};
+  for (let i = 0; i < machine.joltages.length; i++) {
+    constraints[String(i)] = { equal: machine.joltages[i] };
+  }
+
+  const variables: Record<string, Record<string, number>> = {};
+  const ints: Record<string, 1> = { presses: 1 };
+  for (let i = 0; i < machine.wiring.length; i++) {
+    const variable: Record<string, number> = { presses: 1 };
+    for (const item of machine.wiring[i]) {
+      variable[String(item)] = 1;
+    }
+    variables[String(i)] = variable;
+    ints[String(i)] = 1;
+  }
+
+  return {
+    optimize: "presses",
+    opType: "min",
+    constraints: constraints,
+    variables: variables,
+    ints: ints,
+  };
+}
+
+function part1(machines: Machine[]) {
+  const results: number[] = [];
+  for (const machine of machines) {
     const result = bfs(
       [],
       (x: ButtonPresses) => isTarget(x, machine),
@@ -20,16 +71,12 @@ async function solve(input: string) {
     );
     results.push(result?.length || 0);
   }
-  return {
-    part1: sum(results),
-    part2: 0,
-    output: parsed,
-  };
+  return sum(results);
 }
 
 type ButtonPresses = number[];
 type Wiring = number[][];
-type Machine = { target: string; wiring: Wiring };
+type Machine = { target: string; wiring: Wiring; joltages: number[] };
 
 function isTarget(buttons: ButtonPresses, machine: Machine) {
   return (
@@ -39,6 +86,10 @@ function isTarget(buttons: ButtonPresses, machine: Machine) {
 }
 
 function getNext(buttons: ButtonPresses, machine: Machine): ButtonPresses[] {
+  if (buttons.length > 50) {
+    console.log("DEPTH LIMIT!!!");
+    return [];
+  }
   const last = buttons[buttons.length - 1] || 0;
   const result = [];
   for (let i = last; i < machine.wiring.length; i++) {
@@ -101,7 +152,7 @@ function parseLine(line: string) {
   return {
     target: match[1],
     wiring: match[2].trim().split(" ").map(parseWires),
-    joltages: match[3],
+    joltages: match[4].trim().split(",").map(Number),
   };
 }
 
