@@ -6,16 +6,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Solutions } from "./Solutions";
 import { parseLines } from "./parse";
 import { sum } from "./lib";
-
-async function createSolver() {
-  return await import("javascript-lp-solver");
-}
+import solver from "javascript-lp-solver";
 
 async function solve(input: string) {
   console.log("Solving problem");
   const parsed = parseInput(input);
-
-  const solver = await createSolver();
 
   return {
     part1: part1(parsed),
