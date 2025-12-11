@@ -15,7 +15,13 @@ const dayFiles = readdirSync(__dirname)
 
 export default defineConfig({
   plugins: [react(), svgr()],
+  optimizeDeps: {
+    include: ["javascript-lp-solver"],
+  },
   build: {
+    commonjsOptions: {
+      include: [/javascript-lp-solver/, /node_modules/],
+    },
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
