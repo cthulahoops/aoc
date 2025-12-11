@@ -1,11 +1,17 @@
 import example from "./examples/11.txt?raw";
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { InputContext } from "./contexts";
 import { renderApp } from "./App";
 import { useQuery } from "@tanstack/react-query";
 import { Solutions } from "./Solutions";
 import { parseLines } from "./parse";
 import { sum } from "./lib";
+import mermaid from "mermaid";
+
+mermaid.initialize({
+  startOnLoad: false,
+  maxEdges: 2000,
+});
 
 type Node = string;
 type Graph = Map<Node, Node[]>;
@@ -51,9 +57,18 @@ async function solve(input: string) {
     },
   );
 
+  const lines = ["graph TD;\n"];
+  for (const [node, targets] of graph2) {
+    for (const target of targets) {
+      lines.push(`${node}-->${target};\n`);
+    }
+  }
+  const mermaidCode = lines.join("");
+
   return {
     part1: countPaths("you", "out", graph1),
     part2: countPathsVia("svr", "out", ["fft", "dac"], graph2),
+    mermaidCode,
     output: graph2.get("svr"),
   };
 }
@@ -88,21 +103,35 @@ function parseInput(input: string) {
 
 function Solution() {
   const input = useContext(InputContext);
+  const mermaidRef = useRef<HTMLDivElement>(null);
+
   const { data, isLoading } = useQuery({
     queryKey: ["day11", input],
     queryFn: () => solve(input),
+  });
+
+  const {} = useQuery({
+    queryKey: ["mermaid!", data?.mermaidCode || "0"],
+    queryFn: async () => {
+      if (!mermaidRef.current || !data?.mermaidCode) {
+        return false;
+      }
+      const { svg } = await mermaid.render("graphDiv", data.mermaidCode);
+      mermaidRef.current.innerHTML = svg;
+      return true;
+    },
   });
 
   if (isLoading || !data) {
     return <div>Loading</div>;
   }
 
-  const { part1, part2, output } = data;
+  const { part1, part2 } = data;
 
   return (
     <>
       <Solutions part1={part1} part2={part2} />
-      <div>{JSON.stringify(output)}</div>
+      <div ref={mermaidRef} />
     </>
   );
 }

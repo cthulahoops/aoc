@@ -21,7 +21,14 @@ function App({
   example: string;
   children: React.ReactNode;
 }) {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        staleTime: Infinity,
+      },
+    },
+  });
   return (
     <QueryClientProvider client={queryClient}>
       <nav>
